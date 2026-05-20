@@ -1,2 +1,6 @@
 .venv/
 *.pyc
+db.sqlite3
+.gitignore
+documentations.md
+__pycache__/

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Medicine Details - DrugTrack{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Medicine Details</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h1 class="text-white mb-4">
+    <i class="fas fa-pills"></i> Medicine Information
+</h1>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-search"></i> Search Medicine
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Select Drug</label>
+                        <select name="drug_name" class="form-select" required>
+                            <option value="">Choose medicine...</option>
+                            {% for medicine in medicines %}
+                            <option value="{{ medicine.name }}">{{ medicine.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-info-circle"></i> Get Details
+                    </button>
+                </form>
+                
+                <hr>
+                
+                <h6><i class="fas fa-history"></i> Your Frequently Used</h6>
+                {% if user_drugs %}
+                <ul class="list-unstyled">
+                    {% for drug in user_drugs|slice:":5" %}
+                    <li class="mb-2">
+                        <form method="POST" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="drug_name" value="{{ drug }}">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                {{ drug }}
+                            </button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No predictions yet. Start predicting to see your medicines.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        {% if selected_medicine %}
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-capsules"></i> {{ selected_medicine.name }}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <h5><i class="fas fa-stethoscope"></i> Uses</h5>
+                        <p>{{ selected_medicine.uses }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h5><i class="fas fa-clock"></i> Dosage</h5>
+                        <p>{{ selected_medicine.dosage }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Side Effects</h5>
+                        <p>{{ selected_medicine.side_effects }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h5><i class="fas fa-shield-alt"></i> Precautions</h5>
+                        <p>{{ selected_medicine.precautions }}</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h5><i class="fas fa-box"></i> Storage</h5>
+                        <p>{{ selected_medicine.storage }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> How to Use
+            </div>
+            <div class="card-body text-center py-5">
+                <i class="fas fa-pills fa-3x text-muted mb-3"></i>
+                <h4>Select a medicine from the left</h4>
+                <p>Get detailed information about uses, dosage, side effects, and precautions.</p>
+            </div>
+        </div>
+        {% endif %}
+   </div>
+</div>
+{% endblock %}

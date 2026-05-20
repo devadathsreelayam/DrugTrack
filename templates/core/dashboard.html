@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - DrugTrack{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="text-white mb-4">
+            <i class="fas fa-chart-line"></i> Dashboard
+            <small class="text-white-50">Welcome back, {{ user.get_full_name }}!</small>
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <i class="fas fa-stethoscope"></i>
+            <h3>{{ total_predictions }}</h3>
+            <p>Total Predictions</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <i class="fas fa-file-prescription"></i>
+            <h3>{{ total_prescriptions }}</h3>
+            <p>Prescriptions Uploaded</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <i class="fas fa-calendar-day"></i>
+            <h3>Active</h3>
+            <p>Health Status</p>
+        </div>
+    </div>
+</div>
+
+<!-- Latest Health Metrics -->
+{% if latest_metrics %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-heartbeat"></i> Latest Health Metrics
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center">
+                        <h5><i class="fas fa-tachometer-alt"></i> Blood Pressure</h5>
+                        <h3 class="text-primary">{{ latest_metrics.bp }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h5><i class="fas fa-chart-line"></i> Cholesterol</h5>
+                        <h3 class="text-primary">{{ latest_metrics.cholesterol }}</h3>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <h5><i class="fas fa-pills"></i> Last Drug</h5>
+                        <h3 class="text-primary">{{ latest_metrics.drug }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Predictions -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-history"></i> Recent Predictions
+                <a href="{% url 'history' %}" class="btn btn-sm btn-light float-end">View All</a>
+            </div>
+            <div class="card-body">
+                {% if recent_predictions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Age</th>
+                                <th>BP</th>
+                                <th>Cholesterol</th>
+                                <th>Predicted Drug</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pred in recent_predictions %}
+                            <tr>
+                                <td>{{ pred.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>{{ pred.age }}</td>
+                                <td>{{ pred.bp }}</td>
+                                <td>{{ pred.cholesterol }}</td>
+                                <td><strong>{{ pred.predicted_drug }}</strong></td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar" style="width: {{ pred.confidence_score|default:85 }}%;">
+                                            {{ pred.confidence_score|default:85 }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <p>No predictions yet.</p>
+                    <a href="{% url 'predict' %}" class="btn btn-primary">
+                        <i class="fas fa-stethoscope"></i> Make First Prediction
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-bolt"></i> Quick Actions
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <a href="{% url 'predict' %}" class="text-decoration-none">
+                            <i class="fas fa-stethoscope fa-2x text-primary"></i>
+                            <p class="mt-2">New Prediction</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'prescription_upload' %}" class="text-decoration-none">
+                            <i class="fas fa-upload fa-2x text-primary"></i>
+                            <p class="mt-2">Upload Prescription</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'medicine_details' %}" class="text-decoration-none">
+                            <i class="fas fa-pills fa-2x text-primary"></i>
+                            <p class="mt-2">Medicine Info</p>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'pharmacy_list' %}" class="text-decoration-none">
+                            <i class="fas fa-store fa-2x text-primary"></i>
+                            <p class="mt-2">Find Pharmacy</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

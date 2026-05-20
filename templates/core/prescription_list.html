@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}My Prescriptions - DrugTrack{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Prescriptions</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-file-prescription"></i> My Prescriptions
+                <a href="{% url 'prescription_upload' %}" class="btn btn-sm btn-primary float-end">
+                    <i class="fas fa-plus"></i> Upload New
+                </a>
+            </div>
+            <div class="card-body">
+                {% if prescriptions %}
+                <div class="row">
+                    {% for prescription in prescriptions %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            {% if prescription.image %}
+                            <img src="{{ prescription.image.url }}" class="card-img-top" alt="Prescription" style="height: 200px; object-fit: cover;">
+                            {% endif %}
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i> {{ prescription.uploaded_at|date:"Y-m-d H:i" }}
+                                    </small>
+                                </p>
+                                {% if prescription.notes %}
+                                <p class="card-text">{{ prescription.notes }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <form method="POST" action="{% url 'delete_prescription' prescription.id %}" onsubmit="return confirm('Are you sure?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-prescription fa-3x text-muted mb-3"></i>
+                    <h4>No Prescriptions Yet</h4>
+                    <p>Upload your first prescription now.</p>
+                    <a href="{% url 'prescription_upload' %}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Upload Prescription
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

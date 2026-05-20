@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}My Profile - DrugTrack{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Profile</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user-circle"></i> Profile Summary
+            </div>
+            <div class="card-body text-center">
+                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                <h4>{{ user.username }}</h4>
+                <p class="text-muted">{{ user.email }}</p>
+                <hr>
+                <div class="row">
+                    <div class="col-6">
+                        <small class="text-muted">Predictions</small>
+                        <h5>{{ total_predictions }}</h5>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Prescriptions</small>
+                        <h5>{{ total_prescriptions }}</h5>
+                    </div>
+                </div>
+                {% if most_predicted %}
+                <hr>
+                <small class="text-muted">Most Predicted Drug</small>
+                <h5 class="text-primary">{{ most_predicted.predicted_drug }}</h5>
+                <small>({{ most_predicted.count }} times)</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit"></i> Edit Profile
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Update Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

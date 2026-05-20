@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Drug Prediction - DrugTrack{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Predict Drug</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-stethoscope"></i> Patient Information
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        <i class="fas fa-microphone-alt"></i> Predict Drug
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        {% if prediction %}
+        <div class="prediction-box">
+            <i class="fas fa-capsules fa-3x"></i>
+            <h2>{{ prediction.drug }}</h2>
+            <p>Confidence Score: {{ prediction.confidence }}%</p>
+            <p class="mb-0">
+                <i class="fas fa-robot"></i> AI-Powered Recommendation
+            </p>
+        </div>
+        
+        {% if prediction.medicine %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Medicine Information
+            </div>
+            <div class="card-body">
+                <h5>Uses</h5>
+                <p>{{ prediction.medicine.uses }}</p>
+                <h5>Dosage</h5>
+                <p>{{ prediction.medicine.dosage }}</p>
+                <h5>Side Effects</h5>
+                <p>{{ prediction.medicine.side_effects }}</p>
+                <h5>Precautions</h5>
+                <p>{{ prediction.medicine.precautions }}</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-4">
+            <i class="fas fa-info-circle"></i> 
+            Detailed information for this medicine will be available soon.
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-line"></i> About DrugTrack Prediction
+            </div>
+            <div class="card-body">
+                <p>Our AI model analyzes the following parameters to recommend the most suitable medicine:</p>
+                <ul>
+                    <li>Age</li>
+                    <li>Gender</li>
+                    <li>Blood Pressure</li>
+                    <li>Cholesterol Level</li>
+                    <li>Sodium to Potassium Ratio</li>
+                </ul>
+                <p class="mb-0 text-muted">
+                    <i class="fas fa-shield-alt"></i> 
+                    The prediction is based on a trained Decision Tree model with clinical data.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
