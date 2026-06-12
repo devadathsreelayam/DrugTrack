@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Medications - Step 4 of 4{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-check {
+        margin-bottom: 10px;
+    }
+    .form-check-input {
+        margin-right: 10px;
+    }
+    .medication-group {
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-pills"></i> Step 4: Current Medications
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="progress mb-4" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: 100%"></div>
+                </div>
+                <p class="text-muted mb-4">
+                    List any medications you're currently taking. 
+                    This helps us check for potential drug interactions.
+                </p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select common medications:</label>
+                        <div class="medication-group">
+                            {{ form.medications }}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Other medications:</label>
+                        {{ form.other_medications }}
+                        <small class="text-muted">Separate multiple medications with commas</small>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{% url 'signup_stage3' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-success flex-grow-1">
+                            <i class="fas fa-check-circle"></i> Complete Setup
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -226,6 +226,9 @@
                         <i class="fas fa-user-circle"></i> {{ user.first_name }}
                     </a>
                     <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" style="color: #f39c12;">
+                            {{ user.get_full_name }}
+                        </a></li>
                         <li><a class="dropdown-item" href="{% url 'profile' %}">
                             <i class="fas fa-user"></i> Profile
                         </a></li>
@@ -244,7 +247,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'signup' %}">
+                    <a class="nav-link" href="{% url 'signup_stage1' %}">
                         <i class="fas fa-user-plus"></i> Sign Up
                     </a>
                 </li>

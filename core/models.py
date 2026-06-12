@@ -70,3 +70,26 @@ class Pharmacy(models.Model):
     
     class Meta:
         verbose_name_plural = "Pharmacies"
+
+
+class UserHealthProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='health_profile')
+    bp = models.CharField(max_length=10)  # HIGH, LOW, NORMAL
+    cholesterol = models.CharField(max_length=10)  # HIGH, NORMAL
+    na_to_k = models.FloatField()
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - Health Profile"
+
+
+class UserMedication(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='medications')
+    medication_name = models.CharField(max_length=100)
+    added_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'medication_name')
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.medication_name}"

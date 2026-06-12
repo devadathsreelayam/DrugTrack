@@ -4,11 +4,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Count, Avg
 from django.http import JsonResponse
-from .forms import SignupForm, PredictionForm, PrescriptionForm, ProfileForm
-from .models import User, Prediction, Prescription, Medicine
+from .forms import *
+from .models import User, Prediction, Prescription, Medicine, UserHealthProfile, UserMedication
 from .utils.ml_predictor import predictor
 from datetime import datetime
 import math
+
 
 def signup_view(request):
     if request.user.is_authenticated:
@@ -27,6 +28,139 @@ def signup_view(request):
         form = SignupForm()
     
     return render(request, 'accounts/signup.html', {'form': form})
+
+
+def signup_stage1(request):
+    """Stage 1: Basic account creation"""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        form = Stage1SignupForm(request.POST)
+        if form.is_valid():
+            # Create user but don't activate yet
+            user = form.save(commit=False)
+            user.is_active = True
+            user.save()
+            
+            # Log the user in
+            login(request, user)
+            
+            # Redirect to stage 2
+            return redirect('signup_stage2')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = Stage1SignupForm()
+    
+    return render(request, 'accounts/signup_stage1.html', {'form': form, 'stage': 1})
+
+
+@login_required
+def signup_stage2(request):
+    """Stage 2: Personal details"""
+    # Check if user already completed profile
+    if request.user.first_name and request.user.phone_number:
+        return redirect('signup_stage3')
+    
+    if request.method == 'POST':
+        form = Stage2ProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Personal details saved!')
+            return redirect('signup_stage3')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = Stage2ProfileForm(instance=request.user)
+    
+    return render(request, 'accounts/signup_stage2.html', {'form': form, 'stage': 2})
+
+
+@login_required
+def signup_stage3(request):
+    """Stage 3: Health status"""
+    # Check if health profile exists
+    health_profile, created = UserHealthProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        form = Stage3HealthForm(request.POST)
+        if form.is_valid():
+            health_profile.bp = form.cleaned_data['bp']
+            health_profile.cholesterol = form.cleaned_data['cholesterol']
+            health_profile.na_to_k = form.cleaned_data['na_to_k']
+            health_profile.save()
+            
+            messages.success(request, 'Health information saved!')
+            return redirect('signup_stage4')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        # Pre-populate if exists
+        initial = {
+            'bp': health_profile.bp if health_profile.bp else '',
+            'cholesterol': health_profile.cholesterol if health_profile.cholesterol else '',
+            'na_to_k': health_profile.na_to_k if health_profile.na_to_k else '',
+        }
+        form = Stage3HealthForm(initial=initial)
+    
+    return render(request, 'accounts/signup_stage3.html', {'form': form, 'stage': 3})
+
+
+@login_required
+def signup_stage4(request):
+    """Stage 4: Existing medications"""
+    # Get user's current medications
+    current_meds = UserMedication.objects.filter(user=request.user).values_list('medication_name', flat=True)
+    
+    if request.method == 'POST':
+        form = Stage4MedicationsForm(request.POST)
+        if form.is_valid():
+            # Clear existing medications
+            UserMedication.objects.filter(user=request.user).delete()
+            
+            # Add selected medications
+            for med in form.cleaned_data['medications']:
+                UserMedication.objects.create(user=request.user, medication_name=med)
+            
+            # Add other medications (split by comma or new line)
+            other_meds = form.cleaned_data['other_medications']
+            if other_meds:
+                for med in other_meds.replace('\n', ',').split(','):
+                    med = med.strip()
+                    if med:
+                        UserMedication.objects.get_or_create(user=request.user, medication_name=med)
+            
+            messages.success(request, 'Setup complete! Welcome to DrugTrack!')
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        initial = {'medications': list(current_meds)}
+        form = Stage4MedicationsForm(initial=initial)
+    
+    return render(request, 'accounts/signup_stage4.html', {'form': form, 'stage': 4, 'current_meds': current_meds})
+
+
+@login_required
+def complete_profile(request):
+    """Redirect user to appropriate stage based on profile completion"""
+    user = request.user
+    
+    # Check what's missing
+    if not user.first_name or not user.phone_number:
+        return redirect('signup_stage2')
+    
+    try:
+        health_profile = user.health_profile
+        if not health_profile.bp:
+            return redirect('signup_stage3')
+    except UserHealthProfile.DoesNotExist:
+        return redirect('signup_stage3')
+    
+    # Check if medications were added (optional, so don't force)
+    return redirect('dashboard')
+
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -293,3 +427,25 @@ def update_location_view(request):
             messages.error(request, 'Invalid location data.')
     
     return redirect('pharmacy_list')
+
+
+@login_required
+def update_health(request):
+    """Update user's health profile"""
+    if request.method == 'POST':
+        health_profile, created = UserHealthProfile.objects.get_or_create(user=request.user)
+        health_profile.bp = request.POST.get('bp')
+        health_profile.cholesterol = request.POST.get('cholesterol')
+        health_profile.na_to_k = request.POST.get('na_to_k')
+        health_profile.save()
+        messages.success(request, 'Health information updated successfully!')
+    return redirect('profile')
+
+
+@login_required
+def remove_medication(request, med_id):
+    """Remove a medication from user's list"""
+    medication = get_object_or_404(UserMedication, id=med_id, user=request.user)
+    medication.delete()
+    messages.success(request, 'Medication removed successfully.')
+    return redirect('profile')

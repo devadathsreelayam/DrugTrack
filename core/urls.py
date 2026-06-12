@@ -4,7 +4,12 @@ from . import views
 urlpatterns = [
     # Authentication
     path('', views.login_view, name='login'),
-    path('signup/', views.signup_view, name='signup'),
+    path('signup/', views.signup_stage1, name='signup_stage1'),
+    # path('signup/stage1/', views.signup_stage1, name='signup_stage1'),
+    path('signup/stage2/', views.signup_stage2, name='signup_stage2'),
+    path('signup/stage3/', views.signup_stage3, name='signup_stage3'),
+    path('signup/stage4/', views.signup_stage4, name='signup_stage4'),
+    path('complete-profile/', views.complete_profile, name='complete_profile'),
     path('logout/', views.logout_view, name='logout'),
     
     # Core features
@@ -22,4 +27,8 @@ urlpatterns = [
     # Pharmacy
     path('pharmacy/', views.pharmacy_list_view, name='pharmacy_list'),
     path('update-location/', views.update_location_view, name='update_location'),
+
+    # Medication
+    path('update-health/', views.update_health, name='update_health'),
+    path('remove-medication/<int:med_id>/', views.remove_medication, name='remove_medication'),
 ]

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Personal Details - Step 2 of 4{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-circle"></i> Step 2: Personal Details
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="progress mb-4" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: 50%"></div>
+                </div>
+                <p class="text-muted mb-4">Tell us a bit about yourself.</p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{% url 'signup_stage1' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            Continue <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
