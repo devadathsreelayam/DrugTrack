@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Detail - DrugTrack{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'symptom_checker' %}">Symptom Checker</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'symptom_history' %}">History</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Detail</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="text-white mb-4">
+            <i class="fas fa-file-alt"></i> Analysis Detail
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-calendar"></i> 
+                Analyzed on {{ prediction.created_at|date:"Y-m-d H:i:s" }}
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h5><i class="fas fa-notes-medical"></i> Original Symptoms</h5>
+                    <div class="alert alert-secondary">
+                        {{ prediction.symptoms }}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h5><i class="fas fa-virus"></i> Predicted Disease</h5>
+                    <h3 class="text-primary">{{ prediction.predicted_disease }}</h3>
+                    
+                    <div class="progress mb-2" style="height: 25px;">
+                        <div class="progress-bar {% if prediction.confidence_score >= 70 %}bg-success{% elif prediction.confidence_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                             style="width: {{ prediction.confidence_score }}%">
+                            Confidence: {{ prediction.confidence_score }}%
+                        </div>
+                    </div>
+                    
+                    <span class="badge {% if prediction.severity == 'Mild' %}bg-success{% elif prediction.severity == 'Moderate' %}bg-warning{% else %}bg-danger{% endif %}">
+                        Severity: {{ prediction.severity }}
+                    </span>
+                </div>
+                
+                <div class="mb-4">
+                    <h5><i class="fas fa-brain"></i> Reasoning</h5>
+                    <p>{{ prediction.reasoning }}</p>
+                </div>
+                
+                <div class="mb-4">
+                    <h5><i class="fas fa-list"></i> Matched Symptoms</h5>
+                    <ul>
+                        {% for symptom in prediction.common_symptoms_matched %}
+                        <li>{{ symptom }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div class="mb-4">
+                    <h5><i class="fas fa-pills"></i> Suggested Medications</h5>
+                    <ul>
+                        {% for drug in prediction.suggested_drugs %}
+                        <li><strong>{{ drug }}</strong></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>{{ prediction.full_response.disclaimer|default:"This is not a medical diagnosis. Please consult a doctor." }}</strong>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'symptom_checker' %}" class="btn btn-primary">
+                        <i class="fas fa-microphone-alt"></i> New Analysis
+                    </a>
+                    <a href="{% url 'symptom_history' %}" class="btn btn-secondary">
+                        <i class="fas fa-history"></i> Back to History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -31,4 +31,10 @@ urlpatterns = [
     # Medication
     path('update-health/', views.update_health, name='update_health'),
     path('remove-medication/<int:med_id>/', views.remove_medication, name='remove_medication'),
+
+    # Symptom Checker URLs
+    path('symptom-checker/', views.symptom_checker_view, name='symptom_checker'),
+    path('analyze-symptoms/', views.analyze_symptoms_api, name='analyze_symptoms'),
+    path('symptom-history/', views.symptom_history_view, name='symptom_history'),
+    path('symptom-detail/<int:pk>/', views.symptom_detail_view, name='symptom_detail'),
 ]

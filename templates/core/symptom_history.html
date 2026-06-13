@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Symptom History - DrugTrack{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'symptom_checker' %}">Symptom Checker</a></li>
+        <li class="breadcrumb-item active" aria-current="page">History</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="text-white mb-4">
+            <i class="fas fa-history"></i> Symptom Analysis History
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i> Your Past Analyses
+                <a href="{% url 'symptom_checker' %}" class="btn btn-sm btn-primary float-end">
+                    <i class="fas fa-plus"></i> New Analysis
+                </a>
+            </div>
+            <div class="card-body">
+                {% if predictions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Symptoms (Preview)</th>
+                                <th>Predicted Disease</th>
+                                <th>Confidence</th>
+                                <th>Severity</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pred in predictions %}
+                            <tr>
+                                <td>{{ pred.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>{{ pred.symptoms|truncatechars:60 }}</td>
+                                <td><strong>{{ pred.predicted_disease }}</strong></td>
+                                <td>
+                                    <div class="progress" style="height: 20px; width: 100px;">
+                                        <div class="progress-bar {% if pred.confidence_score >= 70 %}bg-success{% elif pred.confidence_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             style="width: {{ pred.confidence_score }}%">
+                                            {{ pred.confidence_score }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge {% if pred.severity == 'Mild' %}bg-success{% elif pred.severity == 'Moderate' %}bg-warning{% else %}bg-danger{% endif %}">
+                                        {{ pred.severity }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'symptom_detail' pred.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-stethoscope fa-3x text-muted mb-3"></i>
+                    <h4>No Symptom Analyses Yet</h4>
+                    <p>Use the symptom checker to get AI-powered health insights.</p>
+                    <a href="{% url 'symptom_checker' %}" class="btn btn-primary">
+                        <i class="fas fa-microphone-alt"></i> Check Symptoms
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

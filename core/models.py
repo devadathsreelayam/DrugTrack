@@ -93,3 +93,22 @@ class UserMedication(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.medication_name}"
+
+
+class SymptomPrediction(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='symptom_predictions')
+    symptoms = models.TextField()
+    predicted_disease = models.CharField(max_length=200)
+    confidence_score = models.IntegerField()
+    severity = models.CharField(max_length=20)
+    reasoning = models.TextField()
+    suggested_drugs = models.JSONField(default=list)
+    common_symptoms_matched = models.JSONField(default=list)
+    full_response = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.predicted_disease} - {self.created_at}"

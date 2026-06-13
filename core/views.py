@@ -5,10 +5,15 @@ from django.contrib import messages
 from django.db.models import Count, Avg
 from django.http import JsonResponse
 from .forms import *
-from .models import User, Prediction, Prescription, Medicine, UserHealthProfile, UserMedication
+from .models import User, Prediction, Prescription, Medicine, UserHealthProfile, UserMedication, SymptomPrediction
 from .utils.ml_predictor import predictor
 from datetime import datetime
 import math
+
+import json
+from .utils.symptom_analyser import symptom_analyzer
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 
 def signup_view(request):
@@ -449,3 +454,79 @@ def remove_medication(request, med_id):
     medication.delete()
     messages.success(request, 'Medication removed successfully.')
     return redirect('profile')
+
+
+@login_required
+def symptom_checker_view(request):
+    """Render the symptom checker page"""
+    return render(request, 'core/symptom_checker.html')
+
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def analyze_symptoms_api(request):
+    """API endpoint to analyze symptoms using Groq"""
+    try:
+        data = json.loads(request.body)
+        symptoms_text = data.get('symptoms', '')
+        
+        if not symptoms_text:
+            return JsonResponse({'error': 'No symptoms provided'}, status=400)
+        
+        # Get prediction from Groq
+        result = symptom_analyzer.predict_disease(symptoms_text)
+        
+        # Save to database
+        symptom_prediction = SymptomPrediction.objects.create(
+            user=request.user,
+            symptoms=symptoms_text,
+            predicted_disease=result.get('predicted_disease', 'Unknown'),
+            confidence_score=result.get('confidence_score', 0),
+            severity=result.get('severity', 'Unknown'),
+            reasoning=result.get('reasoning', ''),
+            suggested_drugs=result.get('suggested_drugs', []),
+            common_symptoms_matched=result.get('common_symptoms_matched', []),
+            full_response=result
+        )
+        
+        # Add advice based on severity
+        severity_advice = {
+            "Mild": "Rest and over-the-counter medications may help. Monitor symptoms.",
+            "Moderate": "Consider scheduling a doctor's appointment within 24-48 hours.",
+            "Severe": "Seek medical attention promptly."
+        }
+        result['general_advice'] = severity_advice.get(
+            result.get('severity', ''), 
+            "Consult a healthcare provider."
+        )
+        
+        # Add drug interaction warning
+        if result.get('confidence_score', 0) > 60:
+            result['interaction_warning'] = "Always inform your doctor about any medications you're currently taking."
+        
+        return JsonResponse(result)
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def symptom_history_view(request):
+    """View past symptom analyses"""
+    predictions = SymptomPrediction.objects.filter(user=request.user)
+    
+    context = {
+        'predictions': predictions,
+        'total': predictions.count(),
+    }
+    return render(request, 'core/symptom_history.html', context)
+
+
+@login_required
+def symptom_detail_view(request, pk):
+    """View detailed symptom analysis"""
+    prediction = get_object_or_404(SymptomPrediction, id=pk, user=request.user)
+    return render(request, 'core/symptom_detail.html', {'prediction': prediction})

@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block title %}Symptom Checker - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .symptom-input {
+        min-height: 180px;
+        resize: vertical;
+    }
+    .result-card {
+        animation: fadeIn 0.5s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .confidence-high { color: #28a745; }
+    .confidence-medium { color: #ffc107; }
+    .confidence-low { color: #dc3545; }
+    .severity-Mild { background-color: #28a74520; border-left: 4px solid #28a745; }
+    .severity-Moderate { background-color: #ffc10720; border-left: 4px solid #ffc107; }
+    .severity-Severe { background-color: #dc354520; border-left: 4px solid #dc3545; }
+    .typing-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #2c7da0;
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Symptom Checker</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="text-white mb-4">
+            <i class="fas fa-stethoscope"></i> AI Symptom Checker
+        </h1>
+        <p class="text-white-50 mb-4">
+            Describe your symptoms in detail, and our AI will analyze them to suggest possible conditions and medications.
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-notes-medical"></i> Describe Your Symptoms
+            </div>
+            <div class="card-body">
+                <form id="symptomForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">What symptoms are you experiencing?</label>
+                        <textarea 
+                            name="symptoms" 
+                            class="form-control symptom-input" 
+                            placeholder="Example: I have a severe headache, fever of 101°F, and my body feels weak. I've had these symptoms for 2 days..."
+                            required
+                        ></textarea>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Be as detailed as possible. Include duration, severity, and any other relevant information.
+                        </small>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="analyzeBtn">
+                        <i class="fas fa-microphone-alt"></i> Analyze Symptoms
+                    </button>
+                    <a href="{% url 'symptom_history' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-history"></i> View History
+                    </a>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> How It Works
+            </div>
+            <div class="card-body">
+                <p>Our AI analyzes your symptoms using advanced language models:</p>
+                <ul>
+                    <li><i class="fas fa-brain"></i> Powered by Groq's Llama 3.3 model</li>
+                    <li><i class="fas fa-chart-line"></i> Provides confidence scores for predictions</li>
+                    <li><i class="fas fa-pills"></i> Suggests common medications</li>
+                    <li><i class="fas fa-shield-alt"></i> Always includes medical disclaimer</li>
+                </ul>
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Important:</strong> This is not a substitute for professional medical advice. Always consult a doctor.
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div id="resultContainer" style="display: none;">
+            <div class="card result-card">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-chart-line"></i> Analysis Results
+                </div>
+                <div class="card-body" id="resultContent">
+                    <!-- Results will be loaded here -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="loadingContainer" style="display: none;">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Analyzing your symptoms with AI...</p>
+                    <small class="text-muted">This may take a few seconds</small>
+                </div>
+            </div>
+        </div>
+        
+        <div id="infoContainer">
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-lightbulb"></i> Tips for Better Results
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Include specific symptoms (e.g., "throbbing headache" vs just "headache")</li>
+                        <li>Mention duration (e.g., "for 3 days", "started yesterday")</li>
+                        <li>Note severity (e.g., "mild", "severe", "getting worse")</li>
+                        <li>Include any relevant medical history</li>
+                        <li>Mention current medications (if any)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('symptomForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const symptoms = document.querySelector('textarea[name="symptoms"]').value;
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resultContainer = document.getElementById('resultContainer');
+    const loadingContainer = document.getElementById('loadingContainer');
+    const infoContainer = document.getElementById('infoContainer');
+    
+    // Show loading, hide previous results
+    loadingContainer.style.display = 'block';
+    resultContainer.style.display = 'none';
+    infoContainer.style.display = 'none';
+    analyzeBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/analyze-symptoms/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({ symptoms: symptoms })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && !data.error) {
+            // Determine confidence class
+            let confidenceClass = 'confidence-low';
+            if (data.confidence_score >= 70) confidenceClass = 'confidence-high';
+            else if (data.confidence_score >= 40) confidenceClass = 'confidence-medium';
+            
+            // Determine severity class for card styling
+            const severityClass = `severity-${data.severity}`;
+            
+            // Build result HTML
+            const resultHtml = `
+                <div class="${severityClass}" style="padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <h4><i class="fas fa-virus"></i> Predicted Condition</h4>
+                    <h2 class="text-primary">${escapeHtml(data.predicted_disease)}</h2>
+                    
+                    <div class="progress mb-3" style="height: 25px;">
+                        <div class="progress-bar ${confidenceClass.replace('confidence-', 'bg-')}" 
+                             style="width: ${data.confidence_score}%">
+                            Confidence: ${data.confidence_score}%
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong><i class="fas fa-tachometer-alt"></i> Severity:</strong>
+                        <span class="badge bg-${data.severity === 'Mild' ? 'success' : (data.severity === 'Moderate' ? 'warning' : 'danger')}">
+                            ${data.severity}
+                        </span>
+                    </div>
+                </div>
+                
+                <h5><i class="fas fa-brain"></i> Reasoning</h5>
+                <p>${escapeHtml(data.reasoning)}</p>
+                
+                <h5><i class="fas fa-list"></i> Matched Symptoms</h5>
+                <ul>
+                    ${data.common_symptoms_matched.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
+                </ul>
+                
+                <h5><i class="fas fa-pills"></i> Suggested Medications</h5>
+                <ul>
+                    ${data.suggested_drugs.map(d => `<li><strong>${escapeHtml(d)}</strong></li>`).join('')}
+                </ul>
+                
+                ${data.general_advice ? `
+                <div class="alert alert-info">
+                    <i class="fas fa-comment-medical"></i>
+                    <strong>Advice:</strong> ${escapeHtml(data.general_advice)}
+                </div>
+                ` : ''}
+                
+                ${data.interaction_warning ? `
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Interaction Warning:</strong> ${escapeHtml(data.interaction_warning)}
+                </div>
+                ` : ''}
+                
+                <div class="alert alert-danger mt-3">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>${escapeHtml(data.disclaimer)}</strong>
+                </div>
+                
+                <hr>
+                
+                <small class="text-muted">
+                    <i class="fas fa-clock"></i> Analyzed at: ${new Date(data.timestamp).toLocaleString()}
+                </small>
+            `;
+            
+            document.getElementById('resultContent').innerHTML = resultHtml;
+            resultContainer.style.display = 'block';
+        } else {
+            document.getElementById('resultContent').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Error: ${escapeHtml(data.error || 'Unable to analyze symptoms')}
+                </div>
+                <button class="btn btn-primary mt-3" onclick="location.reload()">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+            `;
+            resultContainer.style.display = 'block';
+        }
+    } catch (error) {
+        document.getElementById('resultContent').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-circle"></i>
+                Network error: ${escapeHtml(error.message)}
+            </div>
+            <button class="btn btn-primary mt-3" onclick="location.reload()">
+                <i class="fas fa-redo"></i> Try Again
+            </button>
+        `;
+        resultContainer.style.display = 'block';
+    } finally {
+        loadingContainer.style.display = 'none';
+        analyzeBtn.disabled = false;
+        infoContainer.style.display = 'block';
+    }
+});
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}
