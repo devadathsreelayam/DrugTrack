@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from .forms import *
 from .models import User, Prediction, Prescription, Medicine, UserHealthProfile, UserMedication, SymptomPrediction
-from .utils.ml_predictor import predictor
+# from .utils.ml_predictor import predictor
 from datetime import datetime
 import math
 

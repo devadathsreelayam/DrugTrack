@@ -24,7 +24,7 @@ urlpatterns = [
     path('prescription/delete/<int:pk>/', views.delete_prescription_view, name='delete_prescription'),
     
     # Pharmacy
-    path('pharmacy/', views.pharmacy_list_view, name='pharmacy_list'),
+    # path('pharmacy/', views.pharmacy_list_view, name='pharmacy_list'),
     path('update-location/', views.update_location_view, name='update_location'),
 
     # Medication
