@@ -169,7 +169,7 @@ document.getElementById('symptomForm').addEventListener('submit', async function
     analyzeBtn.disabled = true;
     
     try {
-        const response = await fetch('/analyze-symptoms/', {
+        const response = await fetch('{% url "analyze_symptoms" %}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
