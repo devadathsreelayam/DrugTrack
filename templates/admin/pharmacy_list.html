@@ -1,0 +1,118 @@
+{% extends 'admin/base_site.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Pharmacy Management</h1>
+    
+    <!-- Status Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Pending</h5>
+                    <h2>{{ status_counts.pending }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Approved</h5>
+                    <h2>{{ status_counts.approved }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Rejected</h5>
+                    <h2>{{ status_counts.rejected }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-secondary">
+                <div class="card-body">
+                    <h5 class="card-title">Suspended</h5>
+                    <h2>{{ status_counts.suspended }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Search pharmacies..." value="{{ search }}">
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Status</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="suspended" {% if status_filter == 'suspended' %}selected{% endif %}>Suspended</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'admin_pharmacy_list' %}" class="btn btn-secondary w-100">Clear Filters</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Pharmacy List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Pharmacy</th>
+                            <th>Owner</th>
+                            <th>City</th>
+                            <th>Status</th>
+                            <th>Registered</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pharmacy in pharmacies %}
+                        <tr>
+                            <td>
+                                <strong>{{ pharmacy.name }}</strong>
+                                <br>
+                                <small>{{ pharmacy.email }}</small>
+                            </td>
+                            <td>{{ pharmacy.owner.username }}</td>
+                            <td>{{ pharmacy.city }}</td>
+                            <td>
+                                <span class="badge bg-{% if pharmacy.status == 'approved' %}success{% elif pharmacy.status == 'pending' %}warning{% elif pharmacy.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                                    {{ pharmacy.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ pharmacy.created_at|date:"Y-m-d" }}</td>
+                            <td>
+                                <a href="{% url 'admin_pharmacy_approve' pharmacy.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No pharmacies found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Add Stock - DrugTrack{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'pharmacy_dashboard' %}">Pharmacy Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'stock_management' %}">Stock Management</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Add Stock</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-plus-circle"></i> Add New Stock
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    Add a new product to your pharmacy inventory.
+                </p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Tip:</strong> Set a reorder level to get notified when stock is running low.
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Stock
+                        </button>
+                        <a href="{% url 'stock_management' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

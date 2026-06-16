@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Register Pharmacy - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .registration-card {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .info-box {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .info-box i {
+        color: #61a5c2;
+        font-size: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Register Pharmacy</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card registration-card">
+            <div class="card-header">
+                <i class="fas fa-store"></i> Register Your Pharmacy
+            </div>
+            <div class="card-body">
+                <div class="info-box">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-file-signature"></i>
+                            <p class="mt-2"><small>Fill registration details</small></p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-clock"></i>
+                            <p class="mt-2"><small>Wait for admin approval</small></p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-check-circle"></i>
+                            <p class="mt-2"><small>Start managing stock</small></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Note:</strong> Your pharmacy will be reviewed by our admin team. 
+                        Approval typically takes 24-48 hours.
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-paper-plane"></i> Submit Registration
+                    </button>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="text-muted">
+                        <i class="fas fa-shield-alt"></i> 
+                        Your information is secure and will only be used for pharmacy verification.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'admin/base_site.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1>Review Pharmacy: {{ pharmacy.name }}</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Pharmacy Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <tr><th>Name</th><td>{{ pharmacy.name }}</td></tr>
+                        <tr><th>Email</th><td>{{ pharmacy.email }}</td></tr>
+                        <tr><th>Phone</th><td>{{ pharmacy.phone }}</td></tr>
+                        <tr><th>License Number</th><td>{{ pharmacy.license_number }}</td></tr>
+                        <tr><th>Address</th><td>{{ pharmacy.address }}</td></tr>
+                        <tr><th>City</th><td>{{ pharmacy.city }}</td></tr>
+                        <tr><th>State</th><td>{{ pharmacy.state }}</td></tr>
+                        <tr><th>Pincode</th><td>{{ pharmacy.pincode }}</td></tr>
+                        <tr><th>Owner</th><td>{{ pharmacy.owner.username }}</td></tr>
+                        <tr><th>Registered</th><td>{{ pharmacy.created_at|date:"Y-m-d H:i" }}</td></tr>
+                        <tr><th>Current Status</th>
+                            <td>
+                                <span class="badge bg-{% if pharmacy.status == 'approved' %}success{% elif pharmacy.status == 'pending' %}warning{% elif pharmacy.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                                    {{ pharmacy.get_status_display }}
+                                </span>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <!-- License Image -->
+                    {% if pharmacy.license_image %}
+                    <div class="mt-3">
+                        <h6>License Image</h6>
+                        <img src="{{ pharmacy.license_image.url }}" class="img-fluid" style="max-height: 300px;">
+                    </div>
+                    {% endif %}
+                    
+                    {% if pharmacy.certificate_image %}
+                    <div class="mt-3">
+                        <h6>Certificate Image</h6>
+                        <img src="{{ pharmacy.certificate_image.url }}" class="img-fluid" style="max-height: 300px;">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Action</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Decision</label>
+                            <select name="action" class="form-select" required>
+                                <option value="">Select action...</option>
+                                <option value="approve">Approve</option>
+                                <option value="reject">Reject</option>
+                                <option value="suspend">Suspend</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Reason (for rejection/suspension)</label>
+                            <textarea name="reason" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-check-circle"></i> Submit Decision
+                        </button>
+                    </form>
+                    
+                    <hr>
+                    
+                    <a href="{% url 'admin_pharmacy_list' %}" class="btn btn-secondary w-100">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

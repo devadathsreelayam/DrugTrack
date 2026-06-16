@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ pharmacy.name }} - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .pharmacy-header {
+        background: linear-gradient(135deg, #2c7da0, #61a5c2);
+        padding: 30px;
+        border-radius: 15px;
+        color: white;
+        margin-bottom: 20px;
+    }
+    .stock-item {
+        border-left: 3px solid #2c7da0;
+        padding-left: 15px;
+        margin-bottom: 10px;
+    }
+    .rating-card {
+        background: rgba(255,255,255,0.05);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    .rating-stars {
+        color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'pharmacy_list' %}">Pharmacies</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ pharmacy.name }}</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<!-- Pharmacy Header -->
+<div class="pharmacy-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1>{{ pharmacy.name }}</h1>
+            <p class="mb-0">
+                <i class="fas fa-map-marker-alt"></i> {{ pharmacy.address }}, {{ pharmacy.city }}, {{ pharmacy.state }} - {{ pharmacy.pincode }}
+            </p>
+            <p class="mb-0">
+                <i class="fas fa-phone"></i> {{ pharmacy.phone }}
+            </p>
+            <p class="mb-0">
+                <i class="fas fa-envelope"></i> {{ pharmacy.email }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            {% if pharmacy.verified_badge %}
+            <span class="badge bg-success fs-6">
+                <i class="fas fa-check-circle"></i> Verified Pharmacy
+            </span>
+            {% endif %}
+            <br>
+            {% if is_open %}
+            <span class="badge bg-success fs-6 mt-2">
+                <i class="fas fa-circle"></i> Open Now
+            </span>
+            {% else %}
+            <span class="badge bg-danger fs-6 mt-2">
+                <i class="fas fa-circle"></i> Closed
+            </span>
+            {% endif %}
+            <br>
+            <span class="badge bg-info fs-6 mt-2">
+                <i class="fas fa-clock"></i> {{ pharmacy.opens_at|default:"--" }} - {{ pharmacy.closes_at|default:"--" }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Stock Items -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-pills"></i> Available Stock
+                <span class="badge bg-primary float-end">{{ stock_items.count }} products</span>
+            </div>
+            <div class="card-body">
+                {% if stock_items %}
+                <div class="row">
+                    {% for item in stock_items %}
+                    <div class="col-md-6">
+                        <div class="stock-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h6>{{ item.drug.name }}</h6>
+                                    <small class="text-muted">
+                                        {{ item.drug.get_drug_type_display }} | {{ item.drug.dosage_form }}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-rupee-sign"></i> {{ item.price }}
+                                    </small>
+                                </div>
+                                <div>
+                                    <span class="badge bg-success">
+                                        {{ item.available_quantity }} available
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-pills fa-3x text-muted mb-3"></i>
+                    <p>No stock available at this pharmacy.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Ratings -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-star"></i> Ratings & Reviews
+                <span class="float-end">
+                    <span class="badge bg-warning">{{ avg_rating|floatformat:1 }} ★</span>
+                    <span class="badge bg-secondary">{{ total_ratings }} reviews</span>
+                </span>
+            </div>
+            <div class="card-body">
+                {% if user_rating %}
+                <div class="alert alert-info">
+                    <i class="fas fa-check-circle"></i> You rated this pharmacy {{ user_rating.rating }} ★
+                </div>
+                {% endif %}
+                
+                <!-- Rating Form -->
+                <form method="POST" action="{% url 'rate_pharmacy' pharmacy.id %}" class="mb-4">
+                    {% csrf_token %}
+                    <div class="row align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Your Rating</label>
+                            <select name="rating" class="form-select">
+                                <option value="5" {% if user_rating and user_rating.rating == 5 %}selected{% endif %}>5 ★ - Excellent</option>
+                                <option value="4" {% if user_rating and user_rating.rating == 4 %}selected{% endif %}>4 ★ - Good</option>
+                                <option value="3" {% if user_rating and user_rating.rating == 3 %}selected{% endif %}>3 ★ - Average</option>
+                                <option value="2" {% if user_rating and user_rating.rating == 2 %}selected{% endif %}>2 ★ - Poor</option>
+                                <option value="1" {% if user_rating and user_rating.rating == 1 %}selected{% endif %}>1 ★ - Very Poor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Review (Optional)</label>
+                            <input type="text" name="review" class="form-control" placeholder="Share your experience..." value="{{ user_rating.review|default:'' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+                
+                <!-- Reviews List -->
+                {% if ratings %}
+                {% for rating in ratings %}
+                <div class="rating-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>{{ rating.user.username }}</strong>
+                            <span class="rating-stars">
+                                {% for i in "12345" %}
+                                {% if forloop.counter <= rating.rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star"></i>
+                                {% endif %}
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ rating.created_at|date:"M d, Y" }}</small>
+                    </div>
+                    {% if rating.review %}
+                    <p class="mb-0 mt-1">{{ rating.review }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center">No reviews yet. Be the first to rate!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Location -->
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-map"></i> Location
+            </div>
+            <div class="card-body">
+                {% if distance %}
+                <p>
+                    <i class="fas fa-road"></i> 
+                    <strong>{{ distance|floatformat:1 }} km</strong> from your location
+                </p>
+                {% endif %}
+                <p>
+                    <i class="fas fa-map-pin"></i> 
+                    {{ pharmacy.address }}, {{ pharmacy.city }}
+                </p>
+                <p>
+                    <i class="fas fa-phone"></i> 
+                    <a href="tel:{{ pharmacy.phone }}">{{ pharmacy.phone }}</a>
+                </p>
+                {% if pharmacy.latitude and pharmacy.longitude %}
+                <a href="https://www.google.com/maps?q={{ pharmacy.latitude }},{{ pharmacy.longitude }}" 
+                   target="_blank" class="btn btn-primary w-100">
+                    <i class="fas fa-directions"></i> Get Directions
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Pharmacy Info -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Information
+            </div>
+            <div class="card-body">
+                <p>
+                    <i class="fas fa-check-circle text-success"></i> 
+                    Status: {{ pharmacy.get_status_display }}
+                </p>
+                <p>
+                    <i class="fas fa-calendar"></i> 
+                    Registered: {{ pharmacy.created_at|date:"M d, Y" }}
+                </p>
+                <p>
+                    <i class="fas fa-star"></i> 
+                    Rating: {{ pharmacy.average_rating|floatformat:1 }} ★
+                </p>
+                <p>
+                    <i class="fas fa-pills"></i> 
+                    Products: {{ stock_items.count }}
+                </p>
+            </div>
+        </div>
+        
+        {% if pharmacy.owner == request.user %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-cog"></i> Manage
+            </div>
+            <div class="card-body">
+                <a href="{% url 'stock_management' %}" class="btn btn-secondary w-100 mb-2">
+                    <i class="fas fa-edit"></i> Manage Stock
+                </a>
+                <a href="{% url 'pharmacy_dashboard' %}" class="btn btn-info w-100">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

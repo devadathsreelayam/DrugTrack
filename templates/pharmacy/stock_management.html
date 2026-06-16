@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Stock Management - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stock-item-card {
+        transition: transform 0.2s;
+    }
+    .stock-item-card:hover {
+        transform: translateY(-3px);
+    }
+    .stock-actions {
+        display: flex;
+        gap: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'pharmacy_dashboard' %}">Pharmacy Dashboard</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Stock Management</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h1 class="text-white mb-4">
+    <i class="fas fa-cubes"></i> Stock Management
+</h1>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-list"></i> Inventory
+                        <span class="badge bg-primary ms-2">{{ total_items }} items</span>
+                    </div>
+                    <a href="{% url 'add_stock' %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-plus-circle"></i> Add Stock
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filters -->
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <form method="GET" action="{% url 'stock_management' %}" class="row g-2">
+                            <div class="col-md-4">
+                                <input type="text" name="search" class="form-control" 
+                                       placeholder="Search products..." value="{{ search }}">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="availability" class="form-select">
+                                    <option value="">All Products</option>
+                                    <option value="available" {% if availability_filter == 'available' %}selected{% endif %}>
+                                        In Stock
+                                    </option>
+                                    <option value="out_of_stock" {% if availability_filter == 'out_of_stock' %}selected{% endif %}>
+                                        Out of Stock
+                                    </option>
+                                    <option value="low_stock" {% if availability_filter == 'low_stock' %}selected{% endif %}>
+                                        Low Stock
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-filter"></i> Filter
+                                </button>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <a href="{% url 'stock_management' %}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Stock List -->
+                {% if stock_items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Drug</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Available</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in stock_items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ item.drug.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ item.drug.generic_name }}</small>
+                                </td>
+                                <td>{{ item.drug.get_drug_type_display }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>
+                                    {% if item.available_quantity > 0 %}
+                                    <span class="text-success">{{ item.available_quantity }}</span>
+                                    {% else %}
+                                    <span class="text-danger">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>₹{{ item.price }}</td>
+                                <td>
+                                    {% if item.is_available and item.available_quantity > 0 %}
+                                    <span class="badge bg-success">In Stock</span>
+                                    {% if item.available_quantity <= item.reorder_level %}
+                                    <span class="badge bg-warning">Low Stock</span>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="stock-actions">
+                                        <a href="{% url 'edit_stock' item.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'delete_stock' item.id %}" class="btn btn-sm btn-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-cubes fa-3x text-muted mb-3"></i>
+                    <h4>No Stock Items</h4>
+                    <p>
+                        {% if search or availability_filter %}
+                        No items match your filters.
+                        {% else %}
+                        You haven't added any products to your inventory yet.
+                        {% endif %}
+                    </p>
+                    <div class="mt-3">
+                        <a href="{% url 'add_stock' %}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Add First Product
+                        </a>
+                        {% if search or availability_filter %}
+                        <a href="{% url 'stock_management' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
