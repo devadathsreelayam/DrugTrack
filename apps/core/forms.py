@@ -76,19 +76,27 @@ class Stage2ProfileForm(forms.ModelForm):
 
 
 class Stage3HealthForm(forms.Form):
-    """Stage 3: Current health status"""
-    bp = forms.ChoiceField(choices=[('', 'Select blood pressure'), ('HIGH', 'High'), ('LOW', 'Low'), ('NORMAL', 'Normal')],
-                          widget=forms.Select(attrs={'class': 'form-select'}))
-    cholesterol = forms.ChoiceField(choices=[('', 'Select cholesterol level'), ('HIGH', 'High'), ('NORMAL', 'Normal')],
-                                   widget=forms.Select(attrs={'class': 'form-select'}))
+    """Stage 3: Optional health snapshot for recommendations."""
+    bp = forms.ChoiceField(
+        required=False,
+        choices=[('', 'Select blood pressure (optional)'), ('HIGH', 'High'), ('LOW', 'Low'), ('NORMAL', 'Normal')],
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    cholesterol = forms.ChoiceField(
+        required=False,
+        choices=[('', 'Select cholesterol level (optional)'), ('HIGH', 'High'), ('NORMAL', 'Normal')],
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
     na_to_k = forms.FloatField(
-        min_value=5.0, max_value=40.0,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'placeholder': 'e.g., 15.5'})
+        required=False,
+        min_value=0.0,
+        max_value=40.0,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'placeholder': 'Optional - e.g., 15.5'})
     )
 
 
 class Stage4MedicationsForm(forms.Form):
-    """Stage 4: Existing medications"""
+    """Stage 4: Optional medications."""
     medications = forms.MultipleChoiceField(
         required=False,
         choices=[
@@ -105,5 +113,5 @@ class Stage4MedicationsForm(forms.Form):
     )
     other_medications = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'List any other medications you take...'})
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Optional - list any other medications you take...'})
     )

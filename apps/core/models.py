@@ -18,20 +18,26 @@ class User(AbstractUser):
         return self.username
     
     @property
-    def is_pharmacy_owner(self):
-        """Check if user owns a pharmacy"""
-        from apps.pharmacy.models import Pharmacy
-        return Pharmacy.objects.filter(owner=self, status='approved').exists()
-    
-    @property
     def pharmacy(self):
-        """Get user's pharmacy"""
+        """Get the pharmacy linked to this user, if any."""
         from apps.pharmacy.models import Pharmacy
         return Pharmacy.objects.filter(owner=self).first()
+
+    @property
+    def pharmacy_status(self):
+        """Return the pharmacy registration status for this user."""
+        pharmacy = self.pharmacy
+        return pharmacy.status if pharmacy else 'none'
+    
+    @property
+    def is_pharmacy_owner(self):
+        """Check if user owns a pharmacy record, regardless of approval state."""
+        from apps.pharmacy.models import Pharmacy
+        return Pharmacy.objects.filter(owner=self).exists()
     
     @property
     def has_pharmacy_license(self):
-        """Check if user has an approved pharmacy"""
+        """Check if user has an approved pharmacy record."""
         from apps.pharmacy.models import Pharmacy
         return Pharmacy.objects.filter(owner=self, status='approved').exists()
 
@@ -75,9 +81,9 @@ class Medicine(models.Model):
 
 class UserHealthProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='health_profile')
-    bp = models.CharField(max_length=10)  # HIGH, LOW, NORMAL
-    cholesterol = models.CharField(max_length=10)  # HIGH, NORMAL
-    na_to_k = models.FloatField()
+    bp = models.CharField(max_length=10, blank=True, null=True)  # HIGH, LOW, NORMAL
+    cholesterol = models.CharField(max_length=10, blank=True, null=True)  # HIGH, NORMAL
+    na_to_k = models.FloatField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
@@ -113,21 +119,3 @@ class SymptomPrediction(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.predicted_disease} - {self.created_at}"
-
-
-@property
-def pharmacy(self):
-    from apps.pharmacy.models import Pharmacy
-    return Pharmacy.objects.filter(owner=self).first()
-
-
-@property
-def is_pharmacy_owner(self):
-    from apps.pharmacy.models import Pharmacy
-    return Pharmacy.objects.filter(owner=self, status='approved').exists()
-
-
-@property
-def has_pharmacy_license(self):
-    from apps.pharmacy.models import Pharmacy
-    return Pharmacy.objects.filter(owner=self).exists()

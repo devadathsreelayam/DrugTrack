@@ -1,0 +1,72 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block admin_content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Total Users</h6>
+                <h3>{{ total_users }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Patients</h6>
+                <h3>{{ total_patients }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Pharmacies</h6>
+                <h3>{{ total_pharmacies }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h6 class="text-muted">Predictions</h6>
+                <h3>{{ total_predictions }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <strong>Recent Predictions</strong>
+    </div>
+    <div class="card-body">
+        {% if recent_predictions %}
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Drug</th>
+                            <th>Confidence</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in recent_predictions %}
+                        <tr>
+                            <td>{{ p.user.username }}</td>
+                            <td>{{ p.predicted_drug }}</td>
+                            <td>{{ p.confidence_score|default:'-' }}</td>
+                            <td>{{ p.created_at|date:'M d, Y H:i' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="mb-0 text-muted">No predictions yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

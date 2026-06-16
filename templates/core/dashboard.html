@@ -11,61 +11,55 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row mb-4">
     <div class="col-12">
-        <h1 class="text-white mb-4">
-            <i class="fas fa-chart-line"></i> Dashboard
-            <small class="text-white-50">Welcome back, {{ user.get_full_name }}!</small>
-        </h1>
+        <h1 class="text-white mb-2">Welcome back, {{ user.get_full_name|default:user.username }}!</h1>
+        <p class="text-white-50 mb-0">Here’s a quick snapshot of your health and pharmacy activity.</p>
     </div>
 </div>
 
-<!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-md-4">
         <div class="stat-card">
             <i class="fas fa-stethoscope"></i>
             <h3>{{ total_predictions }}</h3>
-            <p>Total Predictions</p>
+            <p>Symptom checks</p>
         </div>
     </div>
     <div class="col-md-4">
         <div class="stat-card">
             <i class="fas fa-file-prescription"></i>
             <h3>{{ total_prescriptions }}</h3>
-            <p>Prescriptions Uploaded</p>
+            <p>Prescriptions</p>
         </div>
     </div>
     <div class="col-md-4">
         <div class="stat-card">
-            <i class="fas fa-calendar-day"></i>
-            <h3>Active</h3>
-            <p>Health Status</p>
+            <i class="fas fa-heartbeat"></i>
+            <h3>{{ health_profile.bp|default:'—' }}</h3>
+            <p>Latest BP status</p>
         </div>
     </div>
 </div>
 
-<!-- Latest Health Metrics -->
 {% if latest_metrics %}
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">
-                <i class="fas fa-heartbeat"></i> Latest Health Metrics
-            </div>
+            <div class="card-header">Latest health summary</div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4 text-center">
-                        <h5><i class="fas fa-tachometer-alt"></i> Blood Pressure</h5>
-                        <h3 class="text-primary">{{ latest_metrics.bp }}</h3>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h5>Blood Pressure</h5>
+                        <p class="fs-4 mb-0 text-primary">{{ latest_metrics.bp }}</p>
                     </div>
-                    <div class="col-md-4 text-center">
-                        <h5><i class="fas fa-chart-line"></i> Cholesterol</h5>
-                        <h3 class="text-primary">{{ latest_metrics.cholesterol }}</h3>
+                    <div class="col-md-4">
+                        <h5>Cholesterol</h5>
+                        <p class="fs-4 mb-0 text-primary">{{ latest_metrics.cholesterol }}</p>
                     </div>
-                    <div class="col-md-4 text-center">
-                        <h5><i class="fas fa-pills"></i> Last Drug</h5>
-                        <h3 class="text-primary">{{ latest_metrics.drug }}</h3>
+                    <div class="col-md-4">
+                        <h5>Suggested Drug</h5>
+                        <p class="fs-4 mb-0 text-primary">{{ latest_metrics.drug }}</p>
                     </div>
                 </div>
             </div>
@@ -74,25 +68,50 @@
 </div>
 {% endif %}
 
-<!-- Recent Predictions -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">Quick actions</div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'symptom_checker' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">Check symptoms</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'prescription_upload' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">Upload prescription</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'prescription_list' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">View prescriptions</div>
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'pharmacy_list' %}" class="text-decoration-none">
+                            <div class="p-3 rounded bg-light">Find pharmacy</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">
-                <i class="fas fa-history"></i> Recent Predictions
-                <a href="{% url 'symptom_history' %}" class="btn btn-sm btn-light float-end">View All</a>
-            </div>
+            <div class="card-header">Recent checks</div>
             <div class="card-body">
                 {% if recent_predictions %}
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Age</th>
-                                <th>BP</th>
-                                <th>Cholesterol</th>
-                                <th>Predicted Drug</th>
+                                <th>Predicted drug</th>
                                 <th>Confidence</th>
                             </tr>
                         </thead>
@@ -100,70 +119,16 @@
                             {% for pred in recent_predictions %}
                             <tr>
                                 <td>{{ pred.created_at|date:"Y-m-d H:i" }}</td>
-                                <td>{{ pred.age }}</td>
-                                <td>{{ pred.bp }}</td>
-                                <td>{{ pred.cholesterol }}</td>
-                                <td><strong>{{ pred.predicted_drug }}</strong></td>
-                                <td>
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar" style="width: {{ pred.confidence_score|default:85 }}%;">
-                                            {{ pred.confidence_score|default:85 }}%
-                                        </div>
-                                    </div>
-                                </td>
+                                <td>{{ pred.predicted_drug }}</td>
+                                <td>{{ pred.confidence_score|default:85 }}%</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                    <p>No predictions yet.</p>
-                    <a href="{% url 'symptom_checker' %}" class="btn btn-primary">
-                        <i class="fas fa-stethoscope"></i> Make First Prediction
-                    </a>
-                </div>
+                <p class="text-muted mb-0">No recent checks yet. Start with a symptom review.</p>
                 {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions -->
-<div class="row mt-4">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-bolt"></i> Quick Actions
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3">
-                        <a href="{% url 'symptom_checker' %}" class="text-decoration-none">
-                            <i class="fas fa-stethoscope fa-2x text-primary"></i>
-                            <p class="mt-2">New Prediction</p>
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="{% url 'prescription_upload' %}" class="text-decoration-none">
-                            <i class="fas fa-upload fa-2x text-primary"></i>
-                            <p class="mt-2">Upload Prescription</p>
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="" class="text-decoration-none">
-                            <i class="fas fa-pills fa-2x text-primary"></i>
-                            <p class="mt-2">Medicine Info</p>
-                        </a>
-                    </div>
-                    <div class="col-md-3">
-                        <a href="{% url 'pharmacy_list' %}" class="text-decoration-none">
-                            <i class="fas fa-store fa-2x text-primary"></i>
-                            <p class="mt-2">Find Pharmacy</p>
-                        </a>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

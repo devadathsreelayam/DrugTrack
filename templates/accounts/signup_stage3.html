@@ -5,27 +5,26 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card">
-            <div class="card-header text-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-heartbeat"></i> Step 3: Current Health Status
-                </h4>
-            </div>
-            <div class="card-body p-4">
+    <div class="col-md-7 col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <span class="badge rounded-pill bg-light text-primary mb-3">Step 3 of 4</span>
+                    <h3 class="mb-2">Optional health details</h3>
+                    <p class="text-muted mb-0">Add these if you want more accurate recommendations</p>
+                </div>
                 <div class="progress mb-4" style="height: 8px;">
                     <div class="progress-bar bg-success" style="width: 75%"></div>
                 </div>
-                <p class="text-muted mb-4">This helps us provide accurate drug recommendations.</p>
                 
                 <form method="POST">
                     {% csrf_token %}
                     {{ form|crispy }}
                     <div class="d-flex gap-2 mt-3">
-                        <a href="{% url 'signup_stage2' %}" class="btn btn-secondary">
+                        <a href="{% url 'signup_stage2' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left"></i> Back
                         </a>
-                        <button type="submit" class="btn btn-primary flex-grow-1">
+                        <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
                             Continue <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>

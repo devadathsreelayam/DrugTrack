@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db.models import Count, Avg, Q
 from django.http import JsonResponse
@@ -19,9 +20,81 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 
+@staff_member_required
+def admin_dashboard(request):
+    """Simple admin dashboard for managing pharmacies, patients, and predictions."""
+    total_users = User.objects.count()
+    total_patients = User.objects.filter(is_staff=False).count()
+    total_pharmacies = Pharmacy.objects.count()
+    total_predictions = Prediction.objects.count()
+    recent_predictions = Prediction.objects.select_related('user').order_by('-created_at')[:8]
+
+    context = {
+        'total_users': total_users,
+        'total_patients': total_patients,
+        'total_pharmacies': total_pharmacies,
+        'total_predictions': total_predictions,
+        'recent_predictions': recent_predictions,
+    }
+    return render(request, 'admin_panel/dashboard.html', context)
+
+
+@staff_member_required
+def admin_users(request):
+    """List all non-staff users (patients)."""
+    users = User.objects.filter(is_staff=False).order_by('-date_joined')
+    search = request.GET.get('search', '')
+    if search:
+        users = users.filter(
+            Q(username__icontains=search) |
+            Q(email__icontains=search) |
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search)
+        )
+    return render(request, 'admin_panel/users.html', {'users': users, 'search': search})
+
+
+@staff_member_required
+def admin_predictions(request):
+    """List symptom predictions made by users."""
+    predictions = Prediction.objects.select_related('user').order_by('-created_at')
+    search = request.GET.get('search', '')
+    if search:
+        predictions = predictions.filter(
+            Q(user__username__icontains=search) |
+            Q(predicted_drug__icontains=search)
+        )
+    return render(request, 'admin_panel/predictions.html', {'predictions': predictions, 'search': search})
+
+
+@staff_member_required
+def admin_pharmacies(request):
+    """List and update pharmacy records."""
+    pharmacies = Pharmacy.objects.select_related('owner').order_by('-created_at')
+    search = request.GET.get('search', '')
+    status = request.GET.get('status', '')
+
+    if search:
+        pharmacies = pharmacies.filter(
+            Q(name__icontains=search) |
+            Q(owner__username__icontains=search) |
+            Q(city__icontains=search)
+        )
+    if status:
+        pharmacies = pharmacies.filter(status=status)
+
+    return render(request, 'admin_panel/pharmacies.html', {
+        'pharmacies': pharmacies,
+        'search': search,
+        'status': status,
+    })
+
+
 def home_view(request):
     """Home page view"""
     if request.user.is_authenticated:
+        if request.user.is_pharmacy_owner:
+            return redirect('pharmacy_dashboard')
         return redirect('dashboard')
     
     # Get some statistics for the home page
@@ -103,52 +176,52 @@ def signup_stage2(request):
 
 @login_required
 def signup_stage3(request):
-    """Stage 3: Health status"""
-    # Check if health profile exists
-    health_profile, created = UserHealthProfile.objects.get_or_create(user=request.user)
-    
+    """Stage 3: Optional health status"""
+    health_profile = getattr(request.user, 'health_profile', None)
+
     if request.method == 'POST':
         form = Stage3HealthForm(request.POST)
         if form.is_valid():
-            health_profile.bp = form.cleaned_data['bp']
-            health_profile.cholesterol = form.cleaned_data['cholesterol']
-            health_profile.na_to_k = form.cleaned_data['na_to_k']
-            health_profile.save()
-            
-            messages.success(request, 'Health information saved!')
+            bp = form.cleaned_data.get('bp') or ''
+            cholesterol = form.cleaned_data.get('cholesterol') or ''
+            na_to_k = form.cleaned_data.get('na_to_k')
+
+            if bp or cholesterol or na_to_k is not None:
+                health_profile = health_profile or UserHealthProfile(user=request.user)
+                health_profile.bp = bp
+                health_profile.cholesterol = cholesterol
+                health_profile.na_to_k = na_to_k
+                health_profile.save()
+                messages.success(request, 'Health details saved.')
+
             return redirect('signup_stage4')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        # Pre-populate if exists
         initial = {
-            'bp': health_profile.bp if health_profile.bp else '',
-            'cholesterol': health_profile.cholesterol if health_profile.cholesterol else '',
-            'na_to_k': health_profile.na_to_k if health_profile.na_to_k else '',
+            'bp': health_profile.bp if health_profile and health_profile.bp else '',
+            'cholesterol': health_profile.cholesterol if health_profile and health_profile.cholesterol else '',
+            'na_to_k': health_profile.na_to_k if health_profile and health_profile.na_to_k is not None else '',
         }
         form = Stage3HealthForm(initial=initial)
-    
+
     return render(request, 'accounts/signup_stage3.html', {'form': form, 'stage': 3})
 
 
 @login_required
 def signup_stage4(request):
-    """Stage 4: Existing medications"""
-    # Get user's current medications
+    """Stage 4: Optional medications"""
     current_meds = UserMedication.objects.filter(user=request.user).values_list('medication_name', flat=True)
     
     if request.method == 'POST':
         form = Stage4MedicationsForm(request.POST)
         if form.is_valid():
-            # Clear existing medications
             UserMedication.objects.filter(user=request.user).delete()
             
-            # Add selected medications
-            for med in form.cleaned_data['medications']:
+            for med in form.cleaned_data.get('medications', []):
                 UserMedication.objects.create(user=request.user, medication_name=med)
             
-            # Add other medications (split by comma or new line)
-            other_meds = form.cleaned_data['other_medications']
+            other_meds = form.cleaned_data.get('other_medications', '')
             if other_meds:
                 for med in other_meds.replace('\n', ',').split(','):
                     med = med.strip()
@@ -188,6 +261,8 @@ def complete_profile(request):
 
 def login_view(request):
     if request.user.is_authenticated:
+        if request.user.is_pharmacy_owner:
+            return redirect('pharmacy_dashboard')
         return redirect('dashboard')
     
     if request.method == 'POST':
@@ -198,6 +273,8 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, f'Welcome back, {user.username}!')
+            if user.is_pharmacy_owner:
+                return redirect('pharmacy_dashboard')
             return redirect('dashboard')
         else:
             messages.error(request, 'Invalid username or password.')
@@ -206,36 +283,38 @@ def login_view(request):
 
 def logout_view(request):
     logout(request)
-    messages.info(request, 'You have been logged out.')
-    return redirect('login')
+    return redirect('home')
 
 @login_required
 def dashboard_view(request):
     user = request.user
-    
-    # Get statistics
     total_predictions = Prediction.objects.filter(user=user).count()
     latest_prediction = Prediction.objects.filter(user=user).first()
     total_prescriptions = Prescription.objects.filter(user=user).count()
-    
-    # Latest health metrics
+    recent_predictions = Prediction.objects.filter(user=user)[:5]
+
+    health_profile = getattr(user, 'health_profile', None)
+    profile_complete = bool(
+        user.first_name and user.last_name and user.phone_number and user.gender and user.age
+    )
+
     latest_metrics = None
     if latest_prediction:
         latest_metrics = {
             'bp': latest_prediction.bp,
             'cholesterol': latest_prediction.cholesterol,
-            'drug': latest_prediction.predicted_drug
+            'drug': latest_prediction.predicted_drug,
+            'created_at': latest_prediction.created_at,
         }
-    
-    # Recent predictions (last 5)
-    recent_predictions = Prediction.objects.filter(user=user)[:5]
-    
+
     context = {
         'total_predictions': total_predictions,
         'latest_prediction': latest_prediction,
         'total_prescriptions': total_prescriptions,
         'latest_metrics': latest_metrics,
         'recent_predictions': recent_predictions,
+        'profile_complete': profile_complete,
+        'health_profile': health_profile,
     }
     return render(request, 'core/dashboard.html', context)
 

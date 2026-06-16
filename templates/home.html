@@ -81,23 +81,25 @@
             </p>
             <div class="hero-buttons mt-4">
                 {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}" class="btn btn-primary">
-                    <i class="fas fa-chart-line"></i> Go to Dashboard
+                <a href="{% if user.is_pharmacy_owner %}{% url 'pharmacy_dashboard' %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-primary">
+                    <i class="fas fa-chart-line"></i> Open Dashboard
                 </a>
+                {% if not user.is_pharmacy_owner %}
                 <a href="{% url 'symptom_checker' %}" class="btn btn-outline-light">
                     <i class="fas fa-stethoscope"></i> Check Symptoms
                 </a>
+                {% endif %}
                 {% else %}
                 <a href="{% url 'signup_stage1' %}" class="btn btn-primary">
-                    <i class="fas fa-user-plus"></i> Get Started
+                    <i class="fas fa-user-plus"></i> Patient Sign Up
                 </a>
                 <a href="{% url 'login' %}" class="btn btn-outline-light">
-                    <i class="fas fa-sign-in-alt"></i> Login
+                    <i class="fas fa-user"></i> Patient Login
+                </a>
+                <a href="{% url 'pharmacy_login' %}" class="btn btn-pharmacy">
+                    <i class="fas fa-store"></i> Pharmacy Login
                 </a>
                 {% endif %}
-                <a href="{% url 'pharmacy_list' %}" class="btn btn-pharmacy">
-                    <i class="fas fa-store"></i> Find Pharmacy
-                </a>
             </div>
         </div>
         <div class="col-md-5 text-center">

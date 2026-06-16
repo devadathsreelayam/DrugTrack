@@ -153,12 +153,10 @@ def _get_status_badge(status):
 # PUBLIC PHARMACY LISTING & SEARCH
 # ======================================================
 
-@login_required
 def pharmacy_list(request):
-    """List all approved pharmacies with search and filters"""
+    """List all approved pharmacies with search and filters."""
     pharmacies = Pharmacy.objects.filter(status='approved', is_active=True)
     
-    # Search by name, city, or address
     search_query = request.GET.get('search', '')
     if search_query:
         pharmacies = pharmacies.filter(
@@ -167,27 +165,20 @@ def pharmacy_list(request):
             Q(address__icontains=search_query)
         )
     
-    # Filter by city
     city = request.GET.get('city', '')
     if city:
         pharmacies = pharmacies.filter(city__icontains=city)
     
-    # Get user location for distance calculation
-    user_lat = request.user.latitude
-    user_lon = request.user.longitude
+    user_lat = request.user.latitude if request.user.is_authenticated else None
+    user_lon = request.user.longitude if request.user.is_authenticated else None
     
-    # Calculate distance for each pharmacy
     pharmacy_list = []
     for pharmacy in pharmacies:
         if user_lat and user_lon and pharmacy.latitude and pharmacy.longitude:
-            distance = haversine_distance(
-                user_lat, user_lon, 
-                pharmacy.latitude, pharmacy.longitude
-            )
+            distance = haversine_distance(user_lat, user_lon, pharmacy.latitude, pharmacy.longitude)
         else:
             distance = None
         
-        # Get stock count
         stock_count = PharmacyStock.objects.filter(
             pharmacy=pharmacy,
             is_available=True,
@@ -202,16 +193,13 @@ def pharmacy_list(request):
             'total_ratings': pharmacy.total_ratings,
         })
     
-    # Sort by distance if available
     if user_lat and user_lon:
         pharmacy_list.sort(key=lambda x: x['distance'] if x['distance'] else float('inf'))
     
-    # Pagination
     paginator = Paginator(pharmacy_list, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Get unique cities for filter
     cities = Pharmacy.objects.filter(
         status='approved', 
         is_active=True
@@ -222,43 +210,36 @@ def pharmacy_list(request):
         'search_query': search_query,
         'city_filter': city,
         'cities': cities,
-        'user_location_set': user_lat is not None,
+        'user_location_set': user_lat is not None and user_lon is not None,
     }
     return render(request, 'pharmacy/pharmacy_list.html', context)
 
 
-@login_required
 def pharmacy_detail(request, pk):
-    """View pharmacy details"""
+    """View pharmacy details publicly, with owner-specific controls on the own page."""
     pharmacy = get_object_or_404(Pharmacy, id=pk, status='approved', is_active=True)
     
-    # Get user location for distance
-    user_lat = request.user.latitude
-    user_lon = request.user.longitude
+    user_lat = request.user.latitude if request.user.is_authenticated else None
+    user_lon = request.user.longitude if request.user.is_authenticated else None
     
     distance = None
     if user_lat and user_lon and pharmacy.latitude and pharmacy.longitude:
-        distance = haversine_distance(
-            user_lat, user_lon, 
-            pharmacy.latitude, pharmacy.longitude
-        )
+        distance = haversine_distance(user_lat, user_lon, pharmacy.latitude, pharmacy.longitude)
     
-    # Get stock items
     stock_items = PharmacyStock.objects.filter(
         pharmacy=pharmacy,
         is_available=True,
         available_quantity__gt=0
     ).select_related('drug')
     
-    # Get ratings
     ratings = PharmacyRating.objects.filter(pharmacy=pharmacy).select_related('user')
     avg_rating = ratings.aggregate(Avg('rating'))['rating__avg'] or 0
     
-    # Check if user has already rated
     user_rating = None
-    if request.user.is_authenticated:
+    is_owner = request.user.is_authenticated and pharmacy.owner_id == request.user.id
+    if request.user.is_authenticated and not is_owner:
         user_rating = PharmacyRating.objects.filter(
-            pharmacy=pharmacy, 
+            pharmacy=pharmacy,
             user=request.user
         ).first()
     
@@ -271,53 +252,43 @@ def pharmacy_detail(request, pk):
         'avg_rating': round(avg_rating, 1),
         'user_rating': user_rating,
         'is_open': pharmacy.is_open_now(),
+        'is_owner': is_owner,
     }
     return render(request, 'pharmacy/pharmacy_detail.html', context)
 
 
-@login_required
 def pharmacy_search(request):
-    """Search for pharmacies with specific drugs"""
+    """Search for pharmacies with specific drugs."""
     form = PharmacySearchForm(request.GET or None)
     results = []
     search_performed = False
     
-    user_lat = request.user.latitude
-    user_lon = request.user.longitude
+    user_lat = request.user.latitude if request.user.is_authenticated else None
+    user_lon = request.user.longitude if request.user.is_authenticated else None
     
     if form.is_valid() and request.GET:
         search_performed = True
         drug_name = form.cleaned_data.get('drug_name')
         city = form.cleaned_data.get('city')
-        
-        # Start with approved pharmacies
         pharmacies = Pharmacy.objects.filter(status='approved', is_active=True)
         
         if city:
             pharmacies = pharmacies.filter(city__icontains=city)
         
-        # If drug name provided, find pharmacies with that drug
         if drug_name:
-            # Find pharmacies that have the drug in stock
             pharmacy_ids = PharmacyStock.objects.filter(
                 drug__name__icontains=drug_name,
                 is_available=True,
                 available_quantity__gt=0
             ).values_list('pharmacy_id', flat=True).distinct()
-            
             pharmacies = pharmacies.filter(id__in=pharmacy_ids)
         
-        # Calculate distances
         for pharmacy in pharmacies:
             if user_lat and user_lon and pharmacy.latitude and pharmacy.longitude:
-                distance = haversine_distance(
-                    user_lat, user_lon, 
-                    pharmacy.latitude, pharmacy.longitude
-                )
+                distance = haversine_distance(user_lat, user_lon, pharmacy.latitude, pharmacy.longitude)
             else:
                 distance = None
             
-            # Get stock for this drug
             stock = None
             if drug_name:
                 stock = PharmacyStock.objects.filter(
@@ -334,7 +305,6 @@ def pharmacy_search(request):
                 'rating': pharmacy.average_rating,
             })
         
-        # Sort by distance
         if user_lat and user_lon:
             results.sort(key=lambda x: x['distance'] if x['distance'] else float('inf'))
     
@@ -342,7 +312,7 @@ def pharmacy_search(request):
         'form': form,
         'results': results[:20],
         'search_performed': search_performed,
-        'user_location_set': user_lat is not None,
+        'user_location_set': user_lat is not None and user_lon is not None,
     }
     return render(request, 'pharmacy/pharmacy_search.html', context)
 

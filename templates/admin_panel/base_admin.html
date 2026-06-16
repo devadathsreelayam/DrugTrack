@@ -3,18 +3,18 @@
 {% block title %}Admin Panel - DrugTrack{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-3">
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-chart-line"></i> Admin Menu
+<div class="row g-3">
+    <div class="col-lg-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
+                <strong><i class="fas fa-shield-alt"></i> Admin Panel</strong>
             </div>
             <div class="list-group list-group-flush">
                 <a href="{% url 'admin_dashboard' %}" class="list-group-item list-group-item-action">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
                 <a href="{% url 'admin_users' %}" class="list-group-item list-group-item-action">
-                    <i class="fas fa-users"></i> Users
+                    <i class="fas fa-users"></i> Patients
                 </a>
                 <a href="{% url 'admin_predictions' %}" class="list-group-item list-group-item-action">
                     <i class="fas fa-chart-line"></i> Predictions
@@ -25,7 +25,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-9">
+    <div class="col-lg-9">
         {% block admin_content %}{% endblock %}
     </div>
 </div>

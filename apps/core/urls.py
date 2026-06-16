@@ -5,7 +5,6 @@ urlpatterns = [
     # Authentication
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_stage1, name='signup_stage1'),
-    # path('signup/stage1/', views.signup_stage1, name='signup_stage1'),
     path('signup/stage2/', views.signup_stage2, name='signup_stage2'),
     path('signup/stage3/', views.signup_stage3, name='signup_stage3'),
     path('signup/stage4/', views.signup_stage4, name='signup_stage4'),
@@ -30,4 +29,10 @@ urlpatterns = [
     path('symptom-checker/', views.symptom_checker_view, name='symptom_checker'),
     path('analyze-symptoms/', views.analyze_symptoms_api, name='analyze_symptoms'),
     path('symptom-detail/<int:pk>/', views.symptom_detail_view, name='symptom_detail'),
+
+    # Admin panel
+    path('admin-panel/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin-panel/users/', views.admin_users, name='admin_users'),
+    path('admin-panel/predictions/', views.admin_predictions, name='admin_predictions'),
+    path('admin-panel/pharmacies/', views.admin_pharmacies, name='admin_pharmacies'),
 ]

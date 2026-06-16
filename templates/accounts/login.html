@@ -5,45 +5,103 @@
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-5">
-        <div class="card">
-            <div class="card-header text-center">
-                <h4 class="mb-0">
-                    <i class="fas fa-sign-in-alt"></i> Welcome Back!
-                </h4>
-            </div>
-            <div class="card-body p-4">
-                <form method="POST">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" name="username" class="form-control" required>
+    <div class="col-md-7 col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <span class="badge rounded-pill bg-light text-primary mb-3">Welcome back</span>
+                    <h3 class="mb-2">Choose your account type</h3>
+                    <p class="text-muted mb-0">Patient login is selected by default</p>
+                </div>
+
+                <div class="d-flex justify-content-center mb-4">
+                    <div class="btn-group" role="group" aria-label="Account type toggle">
+                        <button type="button" class="btn btn-primary active" id="patientTabBtn">
+                            <i class="fas fa-user"></i> Patient
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="pharmacyTabBtn">
+                            <i class="fas fa-store"></i> Pharmacy
+                        </button>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                </div>
+
+                <div id="patientLoginPanel">
+                    <form method="POST" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="account_type" value="patient">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control form-control-lg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control form-control-lg" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-sign-in-alt"></i> Login as Patient
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <span class="text-muted">New here?</span>
+                        <a href="{% url 'signup_stage1' %}" class="text-primary fw-semibold">Create patient account</a>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-sign-in-alt"></i> Login
-                    </button>
-                </form>
-                
-                <hr class="my-4">
-                
-                <div class="text-center">
-                    <p class="mb-0">
-                        Don't have an account? 
-                        <a href="{% url 'signup_stage1' %}" class="text-primary">Sign Up</a>
-                    </p>
+                </div>
+
+                <div id="pharmacyLoginPanel" class="d-none">
+                    <form method="POST" action="{% url 'pharmacy_login' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="account_type" value="pharmacy">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" name="username" class="form-control form-control-lg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control form-control-lg" required>
+                        </div>
+                        <button type="submit" class="btn btn-pharmacy btn-lg w-100">
+                            <i class="fas fa-sign-in-alt"></i> Login as Pharmacy
+                        </button>
+                    </form>
+                    <div class="text-center mt-3">
+                        <span class="text-muted">Own a pharmacy?</span>
+                        <a href="{% url 'pharmacy_register' %}" class="text-success fw-semibold">Register pharmacy</a>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="text-center mt-4">
-            <small class="text-white">
-                <i class="fas fa-capsules"></i> AI-Powered Drug Recommendations
-            </small>
-        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const patientBtn = document.getElementById('patientTabBtn');
+        const pharmacyBtn = document.getElementById('pharmacyTabBtn');
+        const patientPanel = document.getElementById('patientLoginPanel');
+        const pharmacyPanel = document.getElementById('pharmacyLoginPanel');
+
+        function setActive(mode) {
+            if (mode === 'pharmacy') {
+                patientBtn.classList.remove('btn-primary');
+                patientBtn.classList.add('btn-outline-secondary');
+                pharmacyBtn.classList.remove('btn-outline-secondary');
+                pharmacyBtn.classList.add('btn-primary');
+                patientPanel.classList.add('d-none');
+                pharmacyPanel.classList.remove('d-none');
+            } else {
+                pharmacyBtn.classList.remove('btn-primary');
+                pharmacyBtn.classList.add('btn-outline-secondary');
+                patientBtn.classList.remove('btn-outline-secondary');
+                patientBtn.classList.add('btn-primary');
+                pharmacyPanel.classList.add('d-none');
+                patientPanel.classList.remove('d-none');
+            }
+        }
+
+        patientBtn.addEventListener('click', function () { setActive('patient'); });
+        pharmacyBtn.addEventListener('click', function () { setActive('pharmacy'); });
+    });
+</script>
 {% endblock %}
