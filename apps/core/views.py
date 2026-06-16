@@ -239,55 +239,6 @@ def dashboard_view(request):
     }
     return render(request, 'core/dashboard.html', context)
 
-@login_required
-def predict_view(request):
-    prediction_result = None
-    
-    if request.method == 'POST':
-        form = PredictionForm(request.POST)
-        if form.is_valid():
-            age = int(form.cleaned_data['age'])
-            sex = form.cleaned_data['sex']
-            bp = form.cleaned_data['bp']
-            cholesterol = form.cleaned_data['cholesterol']
-            na_to_k = form.cleaned_data['na_to_k']
-            
-            # Get prediction from ML model
-            predicted_drug, confidence = predictor.predict(age, sex, bp, cholesterol, na_to_k)
-            
-            # Save to database
-            prediction = Prediction.objects.create(
-                user=request.user,
-                age=age,
-                sex=sex,
-                bp=bp,
-                cholesterol=cholesterol,
-                na_to_k=na_to_k,
-                predicted_drug=predicted_drug,
-                confidence_score=confidence
-            )
-            
-            # Get medicine details
-            try:
-                medicine = Medicine.objects.get(name__iexact=predicted_drug)
-            except Medicine.DoesNotExist:
-                medicine = None
-            
-            prediction_result = {
-                'drug': predicted_drug,
-                'confidence': round(confidence * 100, 1),
-                'medicine': medicine,
-                'prediction_id': prediction.id
-            }
-            
-            messages.success(request, f'Prediction complete! Recommended: {predicted_drug}')
-    else:
-        form = PredictionForm()
-    
-    return render(request, 'core/predict.html', {
-        'form': form,
-        'prediction': prediction_result
-    })
 
 @login_required
 def profile_view(request):
