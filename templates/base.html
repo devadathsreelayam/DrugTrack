@@ -72,6 +72,30 @@
             color: var(--primary-color) !important;
         }
         
+        .pharmacy-badge {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 4px;
+            font-weight: 500;
+        }
+        
+        .pharmacy-badge.pending {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .nav-username {
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+        
+        .nav-username i {
+            color: var(--primary-color);
+        }
+        
         .main-container {
             min-height: calc(100vh - 140px);
             padding: 40px 0;
@@ -205,63 +229,194 @@
         
         <div class="collapse navbar-collapse" id="navbarNav">
             {% if user.is_authenticated %}
-            <ul class="navbar-nav me-auto">
+            
+                <!-- ============================================ -->
+                <!-- PHARMACY OWNER NAVIGATION -->
+                <!-- ============================================ -->
+                {% if user.is_pharmacy_owner %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pharmacy_dashboard' %}">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'stock_management' %}">
+                            <i class="fas fa-cubes"></i> Inventory
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'add_stock' %}">
+                            <i class="fas fa-plus-circle"></i> Add Stock
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pharmacy_detail' user.pharmacy.id %}">
+                            <i class="fas fa-store"></i> My Pharmacy
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'pharmacy_list' %}">
+                            <i class="fas fa-search"></i> Browse Pharmacies
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- ============================================ -->
+                <!-- PATIENT NAVIGATION -->
+                <!-- ============================================ -->
+                {% else %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'symptom_checker' %}">
+                            <i class="fas fa-stethoscope"></i> Symptom Checker
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'symptom_history' %}">
+                            <i class="fas fa-history"></i> History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'prescription_list' %}">
+                            <i class="fas fa-file-prescription"></i> Prescriptions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link pharmacy-link" href="{% url 'pharmacy_list' %}">
+                            <i class="fas fa-store"></i> Find Pharmacy
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
+                
+                <!-- ============================================ -->
+                <!-- RIGHT SIDE - USER MENU -->
+                <!-- ============================================ -->
+                <ul class="navbar-nav">
+                    <!-- Home link for all logged in users -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="fas fa-home"></i>
+                        </a>
+                    </li>
+                    
+                    <!-- Pharmacy Registration Link (for non-owners) -->
+                    {% if not user.is_pharmacy_owner %}
+                    <li class="nav-item">
+                        <a class="nav-link pharmacy-link" href="{% url 'pharmacy_register' %}">
+                            <i class="fas fa-store"></i> Register Pharmacy
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- Status Badge -->
+                    {% if user.is_pharmacy_owner %}
+                    <li class="nav-item">
+                        <span class="nav-link" style="cursor: default;">
+                            <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                            <span class="pharmacy-badge">Approved</span>
+                        </span>
+                    </li>
+                    {% elif user.has_pharmacy_license %}
+                    <li class="nav-item">
+                        <span class="nav-link" style="cursor: default;">
+                            <i class="fas fa-clock" style="color: #ffc107;"></i>
+                            <span class="pharmacy-badge pending">Pending</span>
+                        </span>
+                    </li>
+                    {% endif %}
+                    
+                    <!-- User Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i>
+                            {% if user.pharmacy %}
+                                <span class="nav-username">{{ user.pharmacy.name }}</span>
+                            {% else %}
+                                <span class="nav-username">{{ user.first_name|default:user.username }}</span>
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <!-- User Info Header -->
+                            <li class="dropdown-header">
+                                {% if user.pharmacy %}
+                                    <strong>{{ user.pharmacy.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-map-marker-alt"></i> {{ user.pharmacy.city }}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-check-circle" style="color: #28a745;"></i> 
+                                        {{ user.pharmacy.get_status_display }}
+                                    </small>
+                                {% else %}
+                                    <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ user.email }}</small>
+                                {% endif %}
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            
+                            <!-- Common Links -->
+                            <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                <i class="fas fa-user"></i> My Profile
+                            </a></li>
+                            
+                            <!-- Pharmacy Owner Specific Links -->
+                            {% if user.is_pharmacy_owner %}
+                            <li><a class="dropdown-item" href="{% url 'pharmacy_dashboard' %}">
+                                <i class="fas fa-store-alt"></i> Pharmacy Dashboard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'stock_management' %}">
+                                <i class="fas fa-cubes"></i> Manage Inventory
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'pharmacy_detail' user.pharmacy.id %}">
+                                <i class="fas fa-eye"></i> View Public Profile
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            
+                            <!-- Patient Specific Links -->
+                            {% if not user.is_pharmacy_owner %}
+                            <li><a class="dropdown-item" href="{% url 'symptom_checker' %}">
+                                <i class="fas fa-stethoscope"></i> Symptom Checker
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'prescription_list' %}">
+                                <i class="fas fa-file-prescription"></i> My Prescriptions
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            {% endif %}
+                            
+                            <!-- Logout -->
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+                
+            {% else %}
+            <!-- ============================================ -->
+            <!-- NOT LOGGED IN - PUBLIC NAVIGATION -->
+            <!-- ============================================ -->
+            <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'dashboard' %}">
-                        <i class="fas fa-chart-line"></i> Dashboard
+                    <a class="nav-link" href="{% url 'home' %}">
+                        <i class="fas fa-home"></i> Home
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'symptom_checker' %}">
-                        <i class="fas fa-stethoscope"></i> Symptom Checker
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'symptom_history' %}">
-                        <i class="fas fa-history"></i> History
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'prescription_list' %}">
-                        <i class="fas fa-file-prescription"></i> Prescriptions
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link pharmacy-link" href="{% url 'pharmacy_list' %}">
+                    <a class="nav-link" href="{% url 'pharmacy_list' %}">
                         <i class="fas fa-store"></i> Find Pharmacy
                     </a>
                 </li>
-            </ul>
-            <ul class="navbar-nav">
-                {% if user.pharmacy_owner %}
-                <li class="nav-item">
-                    <a class="nav-link pharmacy-link" href="{% url 'pharmacy_dashboard' %}">
-                        <i class="fas fa-store-alt"></i> My Pharmacy
-                    </a>
-                </li>
-                {% endif %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="{% url 'profile' %}">
-                            <i class="fas fa-user"></i> Profile
-                        </a></li>
-                        {% if not user.pharmacy_owner %}
-                        <li><a class="dropdown-item" href="{% url 'pharmacy_register' %}">
-                            <i class="fas fa-store"></i> Register Pharmacy
-                        </a></li>
-                        {% endif %}
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'logout' %}">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a></li>
-                    </ul>
-                </li>
-            </ul>
-            {% else %}
-            <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'login' %}">
                         <i class="fas fa-sign-in-alt"></i> Login

@@ -9,6 +9,7 @@ class Pharmacy(models.Model):
     """Pharmacy registration and profile"""
     # Basic Info
     name = models.CharField(max_length=200)
+    owner_name = models.CharField(max_length=200, blank=True, help_text="Full name of the pharmacy owner")
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20)
     license_number = models.CharField(max_length=50, unique=True)

@@ -6,18 +6,42 @@
 {% block extra_css %}
 <style>
     .registration-card {
-        max-width: 800px;
+        max-width: 900px;
         margin: 0 auto;
     }
+    .section-divider {
+        display: flex;
+        align-items: center;
+        margin: 30px 0 20px 0;
+    }
+    .section-divider hr {
+        flex: 1;
+        border: 0;
+        border-top: 2px solid #e2e8f0;
+    }
+    .section-divider span {
+        padding: 0 15px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
     .info-box {
-        background: rgba(255,255,255,0.1);
-        border-radius: 10px;
-        padding: 15px;
-        margin-bottom: 20px;
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        border-left: 4px solid #2c7da0;
     }
     .info-box i {
-        color: #61a5c2;
-        font-size: 1.5rem;
+        color: #2c7da0;
+        font-size: 1.2rem;
+        margin-right: 10px;
+    }
+    .info-box p {
+        margin: 0;
+        color: #475569;
     }
 </style>
 {% endblock %}
@@ -25,8 +49,8 @@
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Register Pharmacy</li>
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item active">Register Pharmacy</li>
     </ol>
 </nav>
 {% endblock %}
@@ -40,34 +64,124 @@
             </div>
             <div class="card-body">
                 <div class="info-box">
-                    <div class="row">
-                        <div class="col-md-4 text-center">
-                            <i class="fas fa-file-signature"></i>
-                            <p class="mt-2"><small>Fill registration details</small></p>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <i class="fas fa-clock"></i>
-                            <p class="mt-2"><small>Wait for admin approval</small></p>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <i class="fas fa-check-circle"></i>
-                            <p class="mt-2"><small>Start managing stock</small></p>
-                        </div>
-                    </div>
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        <strong>One-step registration:</strong> Your account will be created automatically. 
+                        After registration, your pharmacy will be reviewed by our admin team.
+                    </p>
                 </div>
                 
                 <form method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
-                    {{ form|crispy }}
+                    
+                    <!-- Account Details -->
+                    <div class="section-divider">
+                        <hr><span><i class="fas fa-user-circle"></i> Account Details</span><hr>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.username|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.email|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.password|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.confirm_password|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <!-- Pharmacy Details -->
+                    <div class="section-divider">
+                        <hr><span><i class="fas fa-store"></i> Pharmacy Details</span><hr>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.name|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.phone|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.license_number|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.license_image|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <!-- Location -->
+                    <div class="section-divider">
+                        <hr><span><i class="fas fa-map-marker-alt"></i> Location</span><hr>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            {{ form.address|as_crispy_field }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.city|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.state|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.pincode|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.latitude|as_crispy_field }}
+                            <small class="text-muted">Optional - helps users find your pharmacy</small>
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.longitude|as_crispy_field }}
+                            <small class="text-muted">Optional - helps users find your pharmacy</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Working Hours -->
+                    <div class="section-divider">
+                        <hr><span><i class="fas fa-clock"></i> Working Hours</span><hr>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            {{ form.opens_at|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.closes_at|as_crispy_field }}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-check mt-4 pt-2">
+                                {{ form.is_open_24x7 }}
+                                <label class="form-check-label" for="{{ form.is_open_24x7.id_for_label }}">
+                                    Open 24x7
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="alert alert-warning mt-3">
                         <i class="fas fa-info-circle"></i>
                         <strong>Note:</strong> Your pharmacy will be reviewed by our admin team. 
-                        Approval typically takes 24-48 hours.
+                        Approval typically takes 24-48 hours. You will receive a notification once approved.
                     </div>
                     
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-paper-plane"></i> Submit Registration
+                        <i class="fas fa-paper-plane"></i> Register Pharmacy
                     </button>
                 </form>
                 

@@ -113,3 +113,21 @@ class SymptomPrediction(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.predicted_disease} - {self.created_at}"
+
+
+@property
+def pharmacy(self):
+    from apps.pharmacy.models import Pharmacy
+    return Pharmacy.objects.filter(owner=self).first()
+
+
+@property
+def is_pharmacy_owner(self):
+    from apps.pharmacy.models import Pharmacy
+    return Pharmacy.objects.filter(owner=self, status='approved').exists()
+
+
+@property
+def has_pharmacy_license(self):
+    from apps.pharmacy.models import Pharmacy
+    return Pharmacy.objects.filter(owner=self).exists()

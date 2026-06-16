@@ -8,13 +8,15 @@ from django.db.models import Q, Count, Avg
 from django.http import JsonResponse
 from django.utils import timezone
 from django.urls import reverse
-from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import authenticate, get_user_model, login as auth_login
 from .models import Pharmacy, Drug, PharmacyStock, PharmacyRating, PharmacyOpeningHours
 from .forms import PharmacyRegistrationForm, PharmacyStockForm, PharmacySearchForm
 from .utils.distance import find_nearby_pharmacies, find_pharmacies_with_drug, haversine_distance
 import json
 import math
 
+
+User = get_user_model()
 
 # ======================================================
 # PHARMACY REGISTRATION & AUTHENTICATION
@@ -49,28 +51,43 @@ def pharmacy_login_view(request):
     
     return render(request, 'pharmacy/pharmacy_login.html')
 
-@login_required
+
 def pharmacy_register(request):
-    """Register a new pharmacy"""
-    # Check if user already owns a pharmacy
-    existing_pharmacy = Pharmacy.objects.filter(owner=request.user).first()
-    if existing_pharmacy:
-        messages.warning(request, 'You already have a registered pharmacy.')
-        return redirect('pharmacy_dashboard')
+    """Register a new pharmacy with automatic user account creation"""
     
     if request.method == 'POST':
         form = PharmacyRegistrationForm(request.POST, request.FILES)
         if form.is_valid():
-            pharmacy = form.save(commit=False)
-            pharmacy.owner = request.user
-            pharmacy.status = 'pending'
-            pharmacy.save()
-            
-            messages.success(
-                request, 
-                'Pharmacy registered successfully! Waiting for admin approval.'
-            )
-            return redirect('pharmacy_dashboard')
+            try:
+                # Create user account
+                user = User.objects.create_user(
+                    username=form.cleaned_data['username'],
+                    email=form.cleaned_data['email'],
+                    password=form.cleaned_data['password'],
+                    first_name=form.cleaned_data.get('owner_name', ''),
+                )
+                
+                # Create pharmacy
+                pharmacy = form.save(commit=False)
+                pharmacy.owner = user
+                pharmacy.status = 'pending'
+                pharmacy.save()
+                
+                # Log the user in
+                auth_login(request, user)
+                
+                messages.success(
+                    request, 
+                    '🎉 Your pharmacy has been registered successfully! '
+                    'Your account has been created and you will be notified once your pharmacy is approved.'
+                )
+                return redirect('pharmacy_dashboard')
+                
+            except Exception as e:
+                messages.error(request, f'Registration failed: {str(e)}')
+                # Clean up if user was created but pharmacy failed
+                if 'user' in locals():
+                    user.delete()
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -95,7 +112,6 @@ def pharmacy_dashboard(request):
         is_available=True
     )
     
-    # Get recent orders (if implemented)
     # Get statistics
     total_products = PharmacyStock.objects.filter(pharmacy=pharmacy).count()
     total_available = PharmacyStock.objects.filter(
@@ -200,7 +216,7 @@ def pharmacy_list(request):
         status='approved', 
         is_active=True
     ).values_list('city', flat=True).distinct()
-    
+
     context = {
         'pharmacies': page_obj,
         'search_query': search_query,
