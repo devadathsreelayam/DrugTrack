@@ -2,6 +2,73 @@
 
 {% block title %}Symptom History - DrugTrack{% endblock %}
 
+{% block extra_css %}
+<style>
+    .filter-card {
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .severity-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    .severity-Mild { background-color: #28a74520; color: #28a745; border: 1px solid #28a745; }
+    .severity-Moderate { background-color: #ffc10720; color: #ffc107; border: 1px solid #ffc107; }
+    .severity-Severe { background-color: #dc354520; color: #dc3545; border: 1px solid #dc3545; }
+    .history-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+        height: 100%;
+    }
+    .history-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .search-input:focus {
+        box-shadow: none;
+        border-color: #2c7da0;
+    }
+    .drug-tag {
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 11px;
+        display: inline-block;
+        margin: 2px;
+    }
+    .stat-card-mini {
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        height: 100%;
+    }
+    .stat-card-mini i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: #61a5c2;
+    }
+    .stat-card-mini h3 {
+        font-size: 1.8rem;
+        margin: 5px 0;
+        color: white;
+    }
+    .stat-card-mini p {
+        margin: 0;
+        color: rgba(255,255,255,0.7);
+        font-size: 0.85rem;
+    }
+    .stat-card-mini small {
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}
+
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
@@ -13,74 +80,196 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <h1 class="text-white mb-4">
-            <i class="fas fa-history"></i> Symptom Analysis History
-        </h1>
+<h1 class="text-white mb-4">
+    <i class="fas fa-history"></i> Symptom Analysis History
+</h1>
+
+<!-- Statistics Row -->
+<div class="row mb-4">
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-card-mini">
+            <i class="fas fa-stethoscope"></i>
+            <h3>{{ total_predictions }}</h3>
+            <p>Total Analyses</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-card-mini">
+            <i class="fas fa-virus"></i>
+            <h3>{{ most_common_disease.predicted_disease|default:"None"|truncatechars:15 }}</h3>
+            <p>Most Common</p>
+            {% if most_common_disease %}
+            <small class="text-white-50">({{ most_common_disease.count }} times)</small>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-card-mini">
+            <i class="fas fa-chart-line"></i>
+            <h3>{{ severity_counts.Mild|default:0 }} / {{ severity_counts.Moderate|default:0 }} / {{ severity_counts.Severe|default:0 }}</h3>
+            <p>Mild / Moderate / Severe</p>
+        </div>
+    </div>
+    <div class="col-md-3 col-sm-6 mb-3">
+        <div class="stat-card-mini">
+            <i class="fas fa-chart-pie"></i>
+            <h3>{{ disease_labels|length }}</h3>
+            <p>Unique Conditions</p>
+        </div>
     </div>
 </div>
 
+<!-- Search and Filter Section -->
+<div class="filter-card">
+    <form method="GET" action="{% url 'symptom_history' %}" class="row g-3">
+        <div class="col-md-5">
+            <label class="form-label text-white">
+                <i class="fas fa-search"></i> Search
+            </label>
+            <input type="text" name="search" class="form-control search-input" 
+                   placeholder="Search symptoms, diseases, or drugs..." 
+                   value="{{ current_search }}">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label text-white">
+                <i class="fas fa-filter"></i> Filter by Severity
+            </label>
+            <select name="severity" class="form-select">
+                <option value="">All Severities</option>
+                <option value="Mild" {% if current_severity == 'Mild' %}selected{% endif %}>Mild</option>
+                <option value="Moderate" {% if current_severity == 'Moderate' %}selected{% endif %}>Moderate</option>
+                <option value="Severe" {% if current_severity == 'Severe' %}selected{% endif %}>Severe</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100 me-2">
+                <i class="fas fa-search"></i> Apply
+            </button>
+            {% if current_search or current_severity %}
+            <a href="{% url 'symptom_history' %}" class="btn btn-secondary w-100">
+                <i class="fas fa-times"></i> Clear
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- History List -->
 <div class="row">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <i class="fas fa-list"></i> Your Past Analyses
-                <a href="{% url 'symptom_checker' %}" class="btn btn-sm btn-primary float-end">
-                    <i class="fas fa-plus"></i> New Analysis
-                </a>
+                <i class="fas fa-list"></i> Analysis Records
+                <span class="badge bg-primary float-end">{{ total_predictions }} records</span>
             </div>
             <div class="card-body">
                 {% if predictions %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Symptoms (Preview)</th>
-                                <th>Predicted Disease</th>
-                                <th>Confidence</th>
-                                <th>Severity</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for pred in predictions %}
-                            <tr>
-                                <td>{{ pred.created_at|date:"Y-m-d H:i" }}</td>
-                                <td>{{ pred.symptoms|truncatechars:60 }}</td>
-                                <td><strong>{{ pred.predicted_disease }}</strong></td>
-                                <td>
-                                    <div class="progress" style="height: 20px; width: 100px;">
-                                        <div class="progress-bar {% if pred.confidence_score >= 70 %}bg-success{% elif pred.confidence_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                             style="width: {{ pred.confidence_score }}%">
-                                            {{ pred.confidence_score }}%
-                                        </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="badge {% if pred.severity == 'Mild' %}bg-success{% elif pred.severity == 'Moderate' %}bg-warning{% else %}bg-danger{% endif %}">
+                <div class="row">
+                    {% for pred in predictions %}
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card history-card" onclick="window.location.href='{% url 'symptom_detail' pred.id %}'">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="mb-0 text-primary" style="font-size: 1rem;">
+                                        {{ pred.predicted_disease|truncatechars:30 }}
+                                    </h5>
+                                    <span class="severity-badge severity-{{ pred.severity }}">
                                         {{ pred.severity }}
                                     </span>
-                                </td>
-                                <td>
-                                    <a href="{% url 'symptom_detail' pred.id %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                </div>
+                                
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-calendar"></i> {{ pred.created_at|date:"Y-m-d H:i" }}
+                                </p>
+                                
+                                <div class="progress mb-2" style="height: 6px;">
+                                    <div class="progress-bar {% if pred.confidence_score >= 70 %}bg-success{% elif pred.confidence_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                         style="width: {{ pred.confidence_score }}%">
+                                    </div>
+                                </div>
+                                <small class="text-muted">Confidence: {{ pred.confidence_score }}%</small>
+                                
+                                <p class="mt-2 mb-2 small text-muted">
+                                    <i class="fas fa-notes-medical"></i> 
+                                    {{ pred.symptoms|truncatechars:80 }}
+                                </p>
+                                
+                                {% if pred.suggested_drugs %}
+                                <div class="mt-2">
+                                    {% for drug in pred.suggested_drugs|slice:":3" %}
+                                    <span class="drug-tag">
+                                        <i class="fas fa-pills"></i> {{ drug|truncatechars:20 }}
+                                    </span>
+                                    {% endfor %}
+                                    {% if pred.suggested_drugs|length > 3 %}
+                                    <span class="drug-tag">+{{ pred.suggested_drugs|length|add:"-3" }}</span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <hr class="my-2">
+                                
+                                <small class="text-muted">
+                                    <i class="fas fa-brain"></i> {{ pred.reasoning|truncatechars:60 }}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
+                
+                <!-- Pagination -->
+                {% if predictions.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if predictions.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ predictions.previous_page_number }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}">
+                                Previous
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in predictions.paginator.page_range %}
+                        <li class="page-item {% if predictions.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                        
+                        {% if predictions.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ predictions.next_page_number }}{% if current_search %}&search={{ current_search }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}">
+                                Next
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+                
                 {% else %}
                 <div class="text-center py-5">
                     <i class="fas fa-stethoscope fa-3x text-muted mb-3"></i>
-                    <h4>No Symptom Analyses Yet</h4>
-                    <p>Use the symptom checker to get AI-powered health insights.</p>
-                    <a href="{% url 'symptom_checker' %}" class="btn btn-primary">
-                        <i class="fas fa-microphone-alt"></i> Check Symptoms
-                    </a>
+                    <h4>No Symptom Analyses Found</h4>
+                    <p>
+                        {% if current_search or current_severity %}
+                        No results match your filters. Try clearing the filters.
+                        {% else %}
+                        You haven't performed any symptom analyses yet.
+                        {% endif %}
+                    </p>
+                    <div class="mt-3">
+                        <a href="{% url 'symptom_checker' %}" class="btn btn-primary">
+                            <i class="fas fa-microphone-alt"></i> Check Symptoms Now
+                        </a>
+                        {% if current_search or current_severity %}
+                        <a href="{% url 'symptom_history' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endif %}
             </div>

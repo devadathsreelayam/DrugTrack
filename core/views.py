@@ -2,8 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Avg
+from django.db.models import Count, Avg, Q
 from django.http import JsonResponse
+from django.core.paginator import Paginator
 from .forms import *
 from .models import User, Prediction, Prescription, Medicine, UserHealthProfile, UserMedication, SymptomPrediction
 from .utils.ml_predictor import predictor
@@ -271,44 +272,6 @@ def predict_view(request):
     })
 
 @login_required
-def history_view(request):
-    predictions = Prediction.objects.filter(user=request.user)
-    
-    # Statistics for charts
-    drug_counts = {}
-    bp_counts = {}
-    chol_counts = {}
-    
-    for p in predictions:
-        drug_counts[p.predicted_drug] = drug_counts.get(p.predicted_drug, 0) + 1
-        bp_counts[p.bp] = bp_counts.get(p.bp, 0) + 1
-        chol_counts[p.cholesterol] = chol_counts.get(p.cholesterol, 0) + 1
-    
-    # Prepare data for charts (convert to lists for JSON)
-    drug_labels = list(drug_counts.keys())
-    drug_data = list(drug_counts.values())
-    bp_labels = list(bp_counts.keys())
-    bp_data = list(bp_counts.values())
-    chol_labels = list(chol_counts.keys())
-    chol_data = list(chol_counts.values())
-    
-    context = {
-        'predictions': predictions,
-        'total': predictions.count(),
-        'drug_counts': drug_counts,
-        'bp_counts': bp_counts,
-        'chol_counts': chol_counts,
-        # Add these for JavaScript
-        'drug_labels': drug_labels,
-        'drug_data': drug_data,
-        'bp_labels': bp_labels,
-        'bp_data': bp_data,
-        'chol_labels': chol_labels,
-        'chol_data': chol_data,
-    }
-    return render(request, 'core/history.html', context)
-
-@login_required
 def profile_view(request):
     if request.method == 'POST':
         form = ProfileForm(request.POST, instance=request.user)
@@ -333,29 +296,6 @@ def profile_view(request):
         'most_predicted': most_predicted,
     }
     return render(request, 'core/profile.html', context)
-
-@login_required
-def medicine_details_view(request):
-    medicines = Medicine.objects.all()
-    selected_medicine = None
-    
-    if request.method == 'POST':
-        drug_name = request.POST.get('drug_name')
-        if drug_name:
-            try:
-                selected_medicine = Medicine.objects.get(name__iexact=drug_name)
-            except Medicine.DoesNotExist:
-                messages.warning(request, f'Details for {drug_name} not found.')
-    
-    # Get all unique drug names from predictions for this user
-    user_drugs = Prediction.objects.filter(user=request.user).values_list('predicted_drug', flat=True).distinct()
-    
-    context = {
-        'medicines': medicines,
-        'selected_medicine': selected_medicine,
-        'user_drugs': user_drugs,
-    }
-    return render(request, 'core/medicine_details.html', context)
 
 @login_required
 def prescription_upload_view(request):
@@ -515,12 +455,60 @@ def analyze_symptoms_api(request):
 
 @login_required
 def symptom_history_view(request):
-    """View past symptom analyses"""
+    """View past symptom analyses with search and filter"""
     predictions = SymptomPrediction.objects.filter(user=request.user)
     
+    # Get filter parameters
+    severity_filter = request.GET.get('severity', '')
+    search_query = request.GET.get('search', '')
+    
+    # Apply severity filter
+    if severity_filter:
+        predictions = predictions.filter(severity=severity_filter)
+    
+    # Apply search filter
+    if search_query:
+        predictions = predictions.filter(
+            Q(symptoms__icontains=search_query) |
+            Q(predicted_disease__icontains=search_query) |
+            Q(suggested_drugs__icontains=search_query)
+        )
+    
+    # Order by newest first
+    predictions = predictions.order_by('-created_at')
+    
+    # Pagination (12 per page)
+    paginator = Paginator(predictions, 12)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Statistics for the filtered queryset
+    total_predictions = predictions.count()
+    
+    # Most common disease
+    most_common_disease = predictions.values('predicted_disease').annotate(
+        count=Count('predicted_disease')
+    ).order_by('-count').first()
+    
+    # Severity counts
+    severity_counts = {}
+    for p in predictions:
+        severity_counts[p.severity] = severity_counts.get(p.severity, 0) + 1
+    
+    # Disease distribution for chart
+    disease_counts = {}
+    for p in predictions:
+        disease_counts[p.predicted_disease] = disease_counts.get(p.predicted_disease, 0) + 1
+    
     context = {
-        'predictions': predictions,
-        'total': predictions.count(),
+        'predictions': page_obj,
+        'total_predictions': total_predictions,
+        'most_common_disease': most_common_disease,
+        'severity_counts': severity_counts,
+        'disease_labels': list(disease_counts.keys()),
+        'disease_data': list(disease_counts.values()),
+        'current_severity': severity_filter,
+        'current_search': search_query,
     }
     return render(request, 'core/symptom_history.html', context)
 

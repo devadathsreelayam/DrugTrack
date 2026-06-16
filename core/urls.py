@@ -15,9 +15,8 @@ urlpatterns = [
     # Core features
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('predict/', views.predict_view, name='predict'),
-    path('history/', views.history_view, name='history'),
+    path('symptom-history/', views.symptom_history_view, name='symptom_history'),
     path('profile/', views.profile_view, name='profile'),
-    path('medicine-details/', views.medicine_details_view, name='medicine_details'),
     
     # Prescription
     path('prescription/upload/', views.prescription_upload_view, name='prescription_upload'),
@@ -35,6 +34,5 @@ urlpatterns = [
     # Symptom Checker URLs
     path('symptom-checker/', views.symptom_checker_view, name='symptom_checker'),
     path('analyze-symptoms/', views.analyze_symptoms_api, name='analyze_symptoms'),
-    path('symptom-history/', views.symptom_history_view, name='symptom_history'),
     path('symptom-detail/<int:pk>/', views.symptom_detail_view, name='symptom_detail'),
 ]

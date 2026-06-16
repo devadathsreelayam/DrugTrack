@@ -80,7 +80,7 @@
         <div class="card">
             <div class="card-header">
                 <i class="fas fa-history"></i> Recent Predictions
-                <a href="{% url 'history' %}" class="btn btn-sm btn-light float-end">View All</a>
+                <a href="{% url 'symptom_history' %}" class="btn btn-sm btn-light float-end">View All</a>
             </div>
             <div class="card-body">
                 {% if recent_predictions %}
@@ -140,7 +140,7 @@
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-md-3">
-                        <a href="{% url 'predict' %}" class="text-decoration-none">
+                        <a href="{% url 'symptom_checker' %}" class="text-decoration-none">
                             <i class="fas fa-stethoscope fa-2x text-primary"></i>
                             <p class="mt-2">New Prediction</p>
                         </a>
@@ -152,7 +152,7 @@
                         </a>
                     </div>
                     <div class="col-md-3">
-                        <a href="{% url 'medicine_details' %}" class="text-decoration-none">
+                        <a href="" class="text-decoration-none">
                             <i class="fas fa-pills fa-2x text-primary"></i>
                             <p class="mt-2">Medicine Info</p>
                         </a>
