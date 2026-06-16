@@ -71,23 +71,6 @@ class Medicine(models.Model):
     
     def __str__(self):
         return self.name
-    
-
-class Pharmacy(models.Model):
-    name = models.CharField(max_length=200)
-    address = models.TextField()
-    city = models.CharField(max_length=100)
-    phone = models.CharField(max_length=20)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return self.name
-    
-    class Meta:
-        verbose_name_plural = "Pharmacies"
 
 
 class UserHealthProfile(models.Model):

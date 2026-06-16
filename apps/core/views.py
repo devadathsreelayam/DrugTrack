@@ -295,22 +295,6 @@ def delete_prescription_view(request, pk):
     return redirect('prescription_list')
 
 
-@login_required
-def update_location_view(request):
-    if request.method == 'POST':
-        latitude = request.POST.get('latitude')
-        longitude = request.POST.get('longitude')
-        
-        if latitude and longitude:
-            request.user.latitude = float(latitude)
-            request.user.longitude = float(longitude)
-            request.user.save()
-            messages.success(request, 'Location updated successfully!')
-        else:
-            messages.error(request, 'Invalid location data.')
-    
-    return redirect('pharmacy_list')
-
 
 @login_required
 def update_health(request):

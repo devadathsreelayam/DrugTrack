@@ -7,7 +7,7 @@ from apps.core.views import home_view
 urlpatterns = [
     path('', home_view, name='home'),
     path('admin/', admin.site.urls),
-    path('accounts', include('apps.core.urls')),
+    path('accounts/', include('apps.core.urls')),
     path('pharmacy/', include('apps.pharmacy.urls')),
 ]
 

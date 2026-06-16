@@ -14,7 +14,6 @@ urlpatterns = [
     
     # Core features
     path('dashboard/', views.dashboard_view, name='dashboard'),
-    path('predict/', views.predict_view, name='predict'),
     path('symptom-history/', views.symptom_history_view, name='symptom_history'),
     path('profile/', views.profile_view, name='profile'),
     
@@ -22,10 +21,6 @@ urlpatterns = [
     path('prescription/upload/', views.prescription_upload_view, name='prescription_upload'),
     path('prescription/list/', views.prescription_list_view, name='prescription_list'),
     path('prescription/delete/<int:pk>/', views.delete_prescription_view, name='delete_prescription'),
-    
-    # Pharmacy
-    # path('pharmacy/', views.pharmacy_list_view, name='pharmacy_list'),
-    path('update-location/', views.update_location_view, name='update_location'),
 
     # Medication
     path('update-health/', views.update_health, name='update_health'),

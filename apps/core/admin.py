@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Prediction, Prescription, Medicine, Pharmacy
+from .models import User, Prediction, Prescription, Medicine
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'phone_number', 'gender', 'age', 'is_staff', 'date_joined')
@@ -47,14 +47,7 @@ class MedicineAdmin(admin.ModelAdmin):
         return obj.uses[:50] + '...' if len(obj.uses) > 50 else obj.uses
     uses_summary.short_description = 'Uses'
 
-class PharmacyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'address', 'phone', 'latitude', 'longitude', 'is_active')
-    list_filter = ('is_active',)
-    search_fields = ('name', 'address', 'city')
-    list_editable = ('is_active',)
-
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(Prediction, PredictionAdmin)
 admin.site.register(Prescription, PrescriptionAdmin)
 admin.site.register(Medicine, MedicineAdmin)
-admin.site.register(Pharmacy, PharmacyAdmin)
