@@ -273,7 +273,6 @@ def pharmacy_search(request):
         search_performed = True
         drug_name = form.cleaned_data.get('drug_name')
         city = form.cleaned_data.get('city')
-        radius = form.cleaned_data.get('radius', 10)
         
         # Start with approved pharmacies
         pharmacies = Pharmacy.objects.filter(status='approved', is_active=True)
@@ -299,8 +298,6 @@ def pharmacy_search(request):
                     user_lat, user_lon, 
                     pharmacy.latitude, pharmacy.longitude
                 )
-                if distance > radius:
-                    continue
             else:
                 distance = None
             

@@ -4,34 +4,310 @@
 
 {% block extra_css %}
 <style>
+    .symptom-section {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+    }
+    
+    .symptom-section h2 {
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    
+    .symptom-section .subtitle {
+        color: #64748b;
+        font-size: 16px;
+        margin-bottom: 30px;
+    }
+    
     .symptom-input {
-        min-height: 180px;
+        min-height: 120px;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        padding: 16px;
+        font-size: 15px;
+        transition: all 0.3s;
         resize: vertical;
     }
-    .result-card {
-        animation: fadeIn 0.5s ease-in;
+    .symptom-input:focus {
+        border-color: #2c7da0;
+        box-shadow: 0 0 0 4px rgba(44,125,160,0.1);
     }
-    @keyframes fadeIn {
+    .symptom-input::placeholder {
+        color: #94a3b8;
+    }
+    
+    .btn-analyze {
+        background: #2c7da0;
+        color: white;
+        padding: 12px 40px;
+        border-radius: 10px;
+        font-weight: 600;
+        border: none;
+        transition: all 0.3s;
+        font-size: 16px;
+    }
+    .btn-analyze:hover {
+        background: #1a5a7a;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(44,125,160,0.3);
+        color: white;
+    }
+    .btn-analyze:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .feature-tags {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+    .feature-tag {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .feature-tag i {
+        margin-right: 6px;
+        color: #2c7da0;
+    }
+    
+    /* Result Card */
+    .result-card {
+        background: white;
+        border-radius: 20px;
+        padding: 35px;
+        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+        animation: slideUp 0.4s ease;
+    }
+    
+    @keyframes slideUp {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    .confidence-high { color: #28a745; }
-    .confidence-medium { color: #ffc107; }
-    .confidence-low { color: #dc3545; }
-    .severity-Mild { background-color: #28a74520; border-left: 4px solid #28a745; }
-    .severity-Moderate { background-color: #ffc10720; border-left: 4px solid #ffc107; }
-    .severity-Severe { background-color: #dc354520; border-left: 4px solid #dc3545; }
-    .typing-indicator {
-        display: inline-block;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background-color: #2c7da0;
-        animation: pulse 1.5s infinite;
+    
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f1f5f9;
     }
-    @keyframes pulse {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 1; }
+    
+    .disease-name {
+        color: #0f172a;
+        font-size: 26px;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .severity-badge {
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .severity-Mild { background: #dcfce7; color: #166534; }
+    .severity-Moderate { background: #fef3c7; color: #92400e; }
+    .severity-Severe { background: #fee2e2; color: #991b1b; }
+    
+    .confidence-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .confidence-bar {
+        width: 120px;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .confidence-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.6s ease;
+    }
+    .confidence-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+        min-width: 45px;
+    }
+    
+    .reasoning-box {
+        background: #f8fafc;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin: 16px 0;
+    }
+    .reasoning-box p {
+        margin: 0;
+        color: #475569;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+    
+    .symptom-match {
+        display: inline-block;
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 4px 14px;
+        border-radius: 15px;
+        font-size: 13px;
+        margin: 3px 5px 3px 0;
+    }
+    
+    .drug-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
+    }
+    .drug-chip {
+        background: white;
+        border: 2px solid #e2e8f0;
+        color: #0f172a;
+        padding: 8px 20px;
+        border-radius: 25px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .drug-chip:hover {
+        border-color: #2c7da0;
+        background: #f0f9ff;
+    }
+    .drug-chip.active {
+        background: #2c7da0;
+        border-color: #2c7da0;
+        color: white;
+    }
+    .drug-chip i {
+        margin-right: 6px;
+    }
+    
+    .pharmacy-section {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid #f1f5f9;
+    }
+    
+    .pharmacy-section h5 {
+        color: #0f172a;
+        font-weight: 600;
+        font-size: 16px;
+        margin-bottom: 12px;
+    }
+    .pharmacy-section h5 i {
+        color: #2c7da0;
+        margin-right: 8px;
+    }
+    
+    .pharmacy-btn {
+        display: inline-block;
+        background: #f1f5f9;
+        color: #0f172a;
+        padding: 10px 24px;
+        border-radius: 10px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+    .pharmacy-btn:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+    .pharmacy-btn i {
+        color: #2c7da0;
+        margin-right: 8px;
+    }
+    .pharmacy-btn.primary {
+        background: #2c7da0;
+        color: white;
+    }
+    .pharmacy-btn.primary:hover {
+        background: #1a5a7a;
+        color: white;
+    }
+    .pharmacy-btn.primary i {
+        color: white;
+    }
+    
+    .disclaimer-box {
+        background: #fef3c7;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-top: 20px;
+        font-size: 13px;
+        color: #92400e;
+    }
+    .disclaimer-box i {
+        margin-right: 8px;
+    }
+    
+    .empty-state {
+        background: white;
+        border-radius: 20px;
+        padding: 60px 40px;
+        text-align: center;
+        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+    }
+    .empty-state i {
+        font-size: 48px;
+        color: #cbd5e1;
+        margin-bottom: 16px;
+    }
+    .empty-state h4 {
+        color: #0f172a;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .empty-state p {
+        color: #64748b;
+        margin: 0;
+    }
+    
+    .loading-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+    }
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e2e8f0;
+        border-top-color: #2c7da0;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin: 0 auto 16px;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .loading-card p {
+        color: #64748b;
+        margin: 0;
+    }
+    
+    .text-muted-small {
+        color: #94a3b8;
+        font-size: 14px;
     }
 </style>
 {% endblock %}
@@ -40,133 +316,89 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Symptom Checker</li>
+        <li class="breadcrumb-item active">Symptom Checker</li>
     </ol>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="row">
-    <div class="col-md-12">
-        <h1 class="text-white mb-4">
-            <i class="fas fa-stethoscope"></i> AI Symptom Checker
-        </h1>
-        <p class="text-white-50 mb-4">
-            Describe your symptoms in detail, and our AI will analyze them to suggest possible conditions and medications.
-        </p>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-notes-medical"></i> Describe Your Symptoms
-            </div>
-            <div class="card-body">
-                <form id="symptomForm">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">What symptoms are you experiencing?</label>
-                        <textarea 
-                            name="symptoms" 
-                            class="form-control symptom-input" 
-                            placeholder="Example: I have a severe headache, fever of 101°F, and my body feels weak. I've had these symptoms for 2 days..."
-                            required
-                        ></textarea>
-                        <small class="text-muted">
-                            <i class="fas fa-info-circle"></i> 
-                            Be as detailed as possible. Include duration, severity, and any other relevant information.
-                        </small>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="analyzeBtn">
-                        <i class="fas fa-microphone-alt"></i> Analyze Symptoms
-                    </button>
-                    <a href="{% url 'symptom_history' %}" class="btn btn-outline-secondary">
-                        <i class="fas fa-history"></i> View History
-                    </a>
-                </form>
-            </div>
-        </div>
-        
-        <div class="card mt-4">
-            <div class="card-header">
-                <i class="fas fa-info-circle"></i> How It Works
-            </div>
-            <div class="card-body">
-                <p>Our AI analyzes your symptoms using advanced language models:</p>
-                <ul>
-                    <li><i class="fas fa-brain"></i> Powered by Groq's Llama 3.3 model</li>
-                    <li><i class="fas fa-chart-line"></i> Provides confidence scores for predictions</li>
-                    <li><i class="fas fa-pills"></i> Suggests common medications</li>
-                    <li><i class="fas fa-shield-alt"></i> Always includes medical disclaimer</li>
-                </ul>
-                <div class="alert alert-warning mb-0">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Important:</strong> This is not a substitute for professional medical advice. Always consult a doctor.
+    <!-- Input Column -->
+    <div class="col-lg-5">
+        <div class="symptom-section">
+            <h2><i class="fas fa-stethoscope" style="color: #2c7da0;"></i> Symptom Checker</h2>
+            <p class="subtitle">Describe your symptoms and get AI-powered predictions.</p>
+            
+            <form id="symptomForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold" style="color: #0f172a;">What are you experiencing?</label>
+                    <textarea 
+                        name="symptoms" 
+                        class="form-control symptom-input" 
+                        placeholder="Example: Fever, headache, and body aches for 2 days..."
+                        required
+                    ></textarea>
+                    <small class="text-muted-small mt-1 d-block">
+                        <i class="fas fa-info-circle"></i> Include duration and severity for better results
+                    </small>
                 </div>
+                <button type="submit" class="btn btn-analyze w-100" id="analyzeBtn">
+                    <i class="fas fa-microphone-alt"></i> Analyze Symptoms
+                </button>
+            </form>
+            
+            <div class="feature-tags">
+                <span class="feature-tag"><i class="fas fa-brain"></i> AI-Powered</span>
+                <span class="feature-tag"><i class="fas fa-chart-line"></i> Confidence Scores</span>
+                <span class="feature-tag"><i class="fas fa-pills"></i> Drug Suggestions</span>
             </div>
         </div>
     </div>
     
-    <div class="col-md-6">
-        <div id="resultContainer" style="display: none;">
-            <div class="card result-card">
-                <div class="card-header bg-success text-white">
-                    <i class="fas fa-chart-line"></i> Analysis Results
-                </div>
-                <div class="card-body" id="resultContent">
-                    <!-- Results will be loaded here -->
-                </div>
-            </div>
-        </div>
-        
+    <!-- Results Column -->
+    <div class="col-lg-7">
+        <!-- Loading State -->
         <div id="loadingContainer" style="display: none;">
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-3">Analyzing your symptoms with AI...</p>
-                    <small class="text-muted">This may take a few seconds</small>
-                </div>
+            <div class="loading-card">
+                <div class="loading-spinner"></div>
+                <p>Analyzing your symptoms... Please wait</p>
             </div>
         </div>
         
+        <!-- Results -->
+        <div id="resultContainer" style="display: none;">
+            <div id="resultContent"></div>
+        </div>
+        
+        <!-- Empty State -->
         <div id="infoContainer">
-            <div class="card">
-                <div class="card-header">
-                    <i class="fas fa-lightbulb"></i> Tips for Better Results
-                </div>
-                <div class="card-body">
-                    <ul class="mb-0">
-                        <li>Include specific symptoms (e.g., "throbbing headache" vs just "headache")</li>
-                        <li>Mention duration (e.g., "for 3 days", "started yesterday")</li>
-                        <li>Note severity (e.g., "mild", "severe", "getting worse")</li>
-                        <li>Include any relevant medical history</li>
-                        <li>Mention current medications (if any)</li>
-                    </ul>
-                </div>
+            <div class="empty-state">
+                <i class="fas fa-notes-medical"></i>
+                <h4>Ready to help</h4>
+                <p>Enter your symptoms on the left and click Analyze.</p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+let currentDrugs = [];
+
 document.getElementById('symptomForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const symptoms = document.querySelector('textarea[name="symptoms"]').value;
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const resultContainer = document.getElementById('resultContainer');
-    const loadingContainer = document.getElementById('loadingContainer');
-    const infoContainer = document.getElementById('infoContainer');
+    const btn = document.getElementById('analyzeBtn');
+    const loading = document.getElementById('loadingContainer');
+    const results = document.getElementById('resultContainer');
+    const info = document.getElementById('infoContainer');
     
-    // Show loading, hide previous results
-    loadingContainer.style.display = 'block';
-    resultContainer.style.display = 'none';
-    infoContainer.style.display = 'none';
-    analyzeBtn.disabled = true;
+    loading.style.display = 'block';
+    results.style.display = 'none';
+    info.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
     
     try {
         const response = await fetch('{% url "analyze_symptoms" %}', {
@@ -181,105 +413,137 @@ document.getElementById('symptomForm').addEventListener('submit', async function
         const data = await response.json();
         
         if (response.ok && !data.error) {
-            // Determine confidence class
-            let confidenceClass = 'confidence-low';
-            if (data.confidence_score >= 70) confidenceClass = 'confidence-high';
-            else if (data.confidence_score >= 40) confidenceClass = 'confidence-medium';
+            document.getElementById('resultContent').innerHTML = renderResults(data);
+            results.style.display = 'block';
             
-            // Determine severity class for card styling
-            const severityClass = `severity-${data.severity}`;
-            
-            // Build result HTML
-            const resultHtml = `
-                <div class="${severityClass}" style="padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                    <h4><i class="fas fa-virus"></i> Predicted Condition</h4>
-                    <h2 class="text-primary">${escapeHtml(data.predicted_disease)}</h2>
-                    
-                    <div class="progress mb-3" style="height: 25px;">
-                        <div class="progress-bar ${confidenceClass.replace('confidence-', 'bg-')}" 
-                             style="width: ${data.confidence_score}%">
-                            Confidence: ${data.confidence_score}%
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <strong><i class="fas fa-tachometer-alt"></i> Severity:</strong>
-                        <span class="badge bg-${data.severity === 'Mild' ? 'success' : (data.severity === 'Moderate' ? 'warning' : 'danger')}">
-                            ${data.severity}
-                        </span>
-                    </div>
-                </div>
-                
-                <h5><i class="fas fa-brain"></i> Reasoning</h5>
-                <p>${escapeHtml(data.reasoning)}</p>
-                
-                <h5><i class="fas fa-list"></i> Matched Symptoms</h5>
-                <ul>
-                    ${data.common_symptoms_matched.map(s => `<li>${escapeHtml(s)}</li>`).join('')}
-                </ul>
-                
-                <h5><i class="fas fa-pills"></i> Suggested Medications</h5>
-                <ul>
-                    ${data.suggested_drugs.map(d => `<li><strong>${escapeHtml(d)}</strong></li>`).join('')}
-                </ul>
-                
-                ${data.general_advice ? `
-                <div class="alert alert-info">
-                    <i class="fas fa-comment-medical"></i>
-                    <strong>Advice:</strong> ${escapeHtml(data.general_advice)}
-                </div>
-                ` : ''}
-                
-                ${data.interaction_warning ? `
-                <div class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <strong>Interaction Warning:</strong> ${escapeHtml(data.interaction_warning)}
-                </div>
-                ` : ''}
-                
-                <div class="alert alert-danger mt-3">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <strong>${escapeHtml(data.disclaimer)}</strong>
-                </div>
-                
-                <hr>
-                
-                <small class="text-muted">
-                    <i class="fas fa-clock"></i> Analyzed at: ${new Date(data.timestamp).toLocaleString()}
-                </small>
-            `;
-            
-            document.getElementById('resultContent').innerHTML = resultHtml;
-            resultContainer.style.display = 'block';
+            if (data.suggested_drugs && data.suggested_drugs.length > 0) {
+                currentDrugs = data.suggested_drugs;
+            }
         } else {
-            document.getElementById('resultContent').innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i>
-                    Error: ${escapeHtml(data.error || 'Unable to analyze symptoms')}
-                </div>
-                <button class="btn btn-primary mt-3" onclick="location.reload()">
-                    <i class="fas fa-redo"></i> Try Again
-                </button>
-            `;
-            resultContainer.style.display = 'block';
+            showError(data.error || 'Unable to analyze symptoms');
         }
     } catch (error) {
-        document.getElementById('resultContent').innerHTML = `
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i>
-                Network error: ${escapeHtml(error.message)}
-            </div>
-            <button class="btn btn-primary mt-3" onclick="location.reload()">
-                <i class="fas fa-redo"></i> Try Again
-            </button>
-        `;
-        resultContainer.style.display = 'block';
+        showError('Network error. Please try again.');
     } finally {
-        loadingContainer.style.display = 'none';
-        analyzeBtn.disabled = false;
-        infoContainer.style.display = 'block';
+        loading.style.display = 'none';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-microphone-alt"></i> Analyze Symptoms';
     }
 });
+
+function renderResults(data) {
+    const severityColor = data.severity === 'Mild' ? '#22c55e' : 
+                         data.severity === 'Moderate' ? '#eab308' : '#ef4444';
+    
+    let html = `
+        <div class="result-card">
+            <!-- Header -->
+            <div class="result-header">
+                <div>
+                    <h3 class="disease-name">${escapeHtml(data.predicted_disease)}</h3>
+                    <span class="severity-badge severity-${data.severity}">${data.severity}</span>
+                </div>
+                <div class="confidence-section">
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${data.confidence_score}%; background: ${severityColor};"></div>
+                    </div>
+                    <span class="confidence-text">${data.confidence_score}%</span>
+                </div>
+            </div>
+            
+            <!-- Reasoning -->
+            <div class="reasoning-box">
+                <p><strong>Why:</strong> ${escapeHtml(data.reasoning)}</p>
+            </div>
+            
+            <!-- Symptoms -->
+            <div style="margin: 16px 0;">
+                <span style="color: #64748b; font-size: 14px; font-weight: 500;">Symptoms matched:</span>
+                <div style="margin-top: 4px;">
+                    ${data.common_symptoms_matched.map(s => 
+                        `<span class="symptom-match">${escapeHtml(s)}</span>`
+                    ).join('')}
+                </div>
+            </div>
+    `;
+
+    // Drugs
+    if (data.suggested_drugs && data.suggested_drugs.length > 0) {
+        html += `
+            <div style="margin: 16px 0;">
+                <span style="color: #64748b; font-size: 14px; font-weight: 500;">Suggested medications:</span>
+                <div class="drug-chips">
+                    ${data.suggested_drugs.map((drug, i) => `
+                        <span class="drug-chip ${i === 0 ? 'active' : ''}" 
+                              onclick="selectDrug('${escapeHtml(drug)}', this)">
+                            <i class="fas fa-capsules"></i> ${escapeHtml(drug)}
+                        </span>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Pharmacy
+    if (data.suggested_drugs && data.suggested_drugs.length > 0) {
+        const firstDrug = escapeHtml(data.suggested_drugs[0]);
+        html += `
+            <div class="pharmacy-section">
+                <h5><i class="fas fa-store"></i> Find ${firstDrug} near you</h5>
+                <a href="/pharmacy/search/?drug_name=${encodeURIComponent(data.suggested_drugs[0])}" 
+                   class="pharmacy-btn primary" target="_blank">
+                    <i class="fas fa-search"></i> View Pharmacies with ${firstDrug}
+                </a>
+                <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">
+                    <i class="fas fa-info-circle"></i> Click to find nearby pharmacies with this medicine
+                </p>
+            </div>
+        `;
+    }
+
+    // Disclaimer
+    html += `
+        <div class="disclaimer-box">
+            <i class="fas fa-exclamation-triangle"></i>
+            ${escapeHtml(data.disclaimer || 'This is not a medical diagnosis. Please consult a doctor.')}
+        </div>
+    </div>
+    `;
+
+    return html;
+}
+
+function selectDrug(drugName, element) {
+    document.querySelectorAll('.drug-chip').forEach(el => el.classList.remove('active'));
+    if (element) element.classList.add('active');
+    
+    // Update pharmacy section
+    const section = document.querySelector('.pharmacy-section');
+    if (section) {
+        section.innerHTML = `
+            <h5><i class="fas fa-store"></i> Find ${escapeHtml(drugName)} near you</h5>
+            <a href="/pharmacy/search/?drug_name=${encodeURIComponent(drugName)}" 
+               class="pharmacy-btn primary" target="_blank">
+                <i class="fas fa-search"></i> View Pharmacies with ${escapeHtml(drugName)}
+            </a>
+            <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">
+                <i class="fas fa-info-circle"></i> Click to find nearby pharmacies with this medicine
+            </p>
+        `;
+    }
+}
+
+function showError(message) {
+    document.getElementById('resultContent').innerHTML = `
+        <div class="result-card">
+            <div class="alert alert-danger mb-0" style="border-radius: 12px;">
+                <i class="fas fa-exclamation-circle"></i> ${escapeHtml(message)}
+                <br><small>Please try again or check your connection.</small>
+            </div>
+        </div>
+    `;
+    document.getElementById('resultContainer').style.display = 'block';
+}
 
 function escapeHtml(text) {
     if (!text) return '';

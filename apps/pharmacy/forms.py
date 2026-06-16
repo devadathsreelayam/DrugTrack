@@ -62,12 +62,3 @@ class PharmacySearchForm(forms.Form):
             'placeholder': 'City'
         })
     )
-    radius = forms.IntegerField(
-        initial=10, 
-        required=False,
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 100
-        })
-    )
