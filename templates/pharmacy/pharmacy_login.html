@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Pharmacy Login - DrugTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card">
+            <div class="card-header text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-store"></i> Pharmacy Login
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{% url 'pharmacy_login' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-pharmacy w-100">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="mb-2">
+                        Don't have a pharmacy account?
+                    </p>
+                    <a href="{% url 'pharmacy_register' %}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-store"></i> Register Your Pharmacy
+                    </a>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="{% url 'login' %}" class="text-muted">
+                        <i class="fas fa-user"></i> User Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

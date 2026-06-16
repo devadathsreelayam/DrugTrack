@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.db.models import Count, Avg, Q
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+
+from apps.pharmacy.models import Drug, Pharmacy
 from .forms import *
 from .models import User, Prediction, Prescription, Medicine, UserHealthProfile, UserMedication, SymptomPrediction
 # from .utils.ml_predictor import predictor
@@ -15,6 +17,22 @@ import json
 from .utils.symptom_analyser import symptom_analyzer
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+
+
+def home_view(request):
+    """Home page view"""
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    
+    # Get some statistics for the home page
+    total_pharmacies = Pharmacy.objects.filter(status='approved', is_active=True).count()
+    total_medicines = Drug.objects.count()
+    
+    context = {
+        'total_pharmacies': total_pharmacies,
+        'total_medicines': total_medicines,
+    }
+    return render(request, 'home.html', context)
 
 
 def signup_view(request):
@@ -325,37 +343,6 @@ def delete_prescription_view(request, pk):
         messages.success(request, 'Prescription deleted successfully.')
     return redirect('prescription_list')
 
-# Pharmacy related views (using admin-managed data)
-@login_required
-def pharmacy_list_view(request):
-    from .models import Pharmacy
-    
-    pharmacies = Pharmacy.objects.filter(is_active=True)
-    user_lat = request.user.latitude
-    user_lon = request.user.longitude
-    
-    # Calculate distance for each pharmacy if user location exists
-    for pharmacy in pharmacies:
-        if user_lat and user_lon and pharmacy.latitude and pharmacy.longitude:
-            pharmacy.distance = calculate_distance(
-                user_lat, user_lon, 
-                pharmacy.latitude, pharmacy.longitude
-            )
-        else:
-            pharmacy.distance = None
-    
-    # Sort by distance
-    pharmacies = sorted(pharmacies, key=lambda x: x.distance if x.distance else float('inf'))
-    
-    context = {
-        'pharmacies': pharmacies,
-        'user_location_set': user_lat is not None
-    }
-    return render(request, 'core/pharmacy_list.html', context)
-
-def calculate_distance(lat1, lon1, lat2, lon2):
-    """Calculate Euclidean distance (simplified)"""
-    return math.sqrt((lat1 - lat2)**2 + (lon1 - lon2)**2) * 111  # Rough km conversion
 
 @login_required
 def update_location_view(request):

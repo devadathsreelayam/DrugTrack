@@ -16,6 +16,24 @@ class User(AbstractUser):
     
     def __str__(self):
         return self.username
+    
+    @property
+    def is_pharmacy_owner(self):
+        """Check if user owns a pharmacy"""
+        from apps.pharmacy.models import Pharmacy
+        return Pharmacy.objects.filter(owner=self, status='approved').exists()
+    
+    @property
+    def pharmacy(self):
+        """Get user's pharmacy"""
+        from apps.pharmacy.models import Pharmacy
+        return Pharmacy.objects.filter(owner=self).first()
+    
+    @property
+    def has_pharmacy_license(self):
+        """Check if user has an approved pharmacy"""
+        from apps.pharmacy.models import Pharmacy
+        return Pharmacy.objects.filter(owner=self, status='approved').exists()
 
 class Prediction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='predictions')

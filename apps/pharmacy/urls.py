@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     # Pharmacy registration
+    path('login/', views.pharmacy_login_view, name='pharmacy_login'),
     path('register/', views.pharmacy_register, name='pharmacy_register'),
     path('dashboard/', views.pharmacy_dashboard, name='pharmacy_dashboard'),
     

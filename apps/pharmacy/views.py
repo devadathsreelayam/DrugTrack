@@ -8,6 +8,7 @@ from django.db.models import Q, Count, Avg
 from django.http import JsonResponse
 from django.utils import timezone
 from django.urls import reverse
+from django.contrib.auth import authenticate, login as auth_login
 from .models import Pharmacy, Drug, PharmacyStock, PharmacyRating, PharmacyOpeningHours
 from .forms import PharmacyRegistrationForm, PharmacyStockForm, PharmacySearchForm
 from .utils.distance import find_nearby_pharmacies, find_pharmacies_with_drug, haversine_distance
@@ -18,6 +19,35 @@ import math
 # ======================================================
 # PHARMACY REGISTRATION & AUTHENTICATION
 # ======================================================
+
+
+def pharmacy_login_view(request):
+    """Pharmacy login view"""
+    if request.user.is_authenticated:
+        # Check if user owns a pharmacy
+        if Pharmacy.objects.filter(owner=request.user).exists():
+            return redirect('pharmacy_dashboard')
+        else:
+            return redirect('dashboard')
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        
+        if user is not None:
+            auth_login(request, user)
+            # Check if user owns a pharmacy
+            if Pharmacy.objects.filter(owner=user).exists():
+                messages.success(request, f'Welcome back, {user.username}!')
+                return redirect('pharmacy_dashboard')
+            else:
+                messages.info(request, 'You need to register a pharmacy first.')
+                return redirect('pharmacy_register')
+        else:
+            messages.error(request, 'Invalid username or password.')
+    
+    return render(request, 'pharmacy/pharmacy_login.html')
 
 @login_required
 def pharmacy_register(request):

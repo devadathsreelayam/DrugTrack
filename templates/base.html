@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DrugTrack - AI Drug Prediction System{% endblock %}</title>
+    <title>{% block title %}DrugTrack - AI Drug Prediction & Pharmacy System{% endblock %}</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -32,11 +32,11 @@
         .navbar {
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 1rem 2rem;
+            padding: 0.8rem 2rem;
         }
         
         .navbar-brand {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: bold;
             color: var(--primary-color) !important;
         }
@@ -51,6 +51,7 @@
             font-weight: 500;
             margin: 0 5px;
             transition: all 0.3s;
+            padding: 0.5rem 1rem;
         }
         
         .nav-link:hover {
@@ -60,6 +61,15 @@
         
         .nav-link i {
             margin-right: 5px;
+        }
+        
+        .nav-link.pharmacy-link {
+            color: var(--secondary-color) !important;
+            font-weight: 600;
+        }
+        
+        .nav-link.pharmacy-link:hover {
+            color: var(--primary-color) !important;
         }
         
         .main-container {
@@ -97,6 +107,21 @@
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(44,125,160,0.3);
+        }
+        
+        .btn-pharmacy {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-weight: 500;
+            color: white;
+        }
+        
+        .btn-pharmacy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40,167,69,0.3);
+            color: white;
         }
         
         .footer {
@@ -138,20 +163,6 @@
             margin: 0;
         }
         
-        .prediction-box {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            margin-top: 20px;
-        }
-        
-        .prediction-box h2 {
-            font-size: 2.5rem;
-            margin: 15px 0;
-        }
-        
         .breadcrumb {
             background: transparent;
             padding: 0;
@@ -161,6 +172,10 @@
         .breadcrumb-item a {
             color: var(--primary-color);
             text-decoration: none;
+        }
+        
+        .breadcrumb-item.active {
+            color: white;
         }
         
         @media (max-width: 768px) {
@@ -180,7 +195,7 @@
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-lg">
     <div class="container">
-        <a class="navbar-brand" href="{% url 'dashboard' %}">
+        <a class="navbar-brand" href="{% url 'home' %}">
             <i class="fas fa-capsules"></i> DrugTrack
         </a>
         
@@ -190,7 +205,7 @@
         
         <div class="collapse navbar-collapse" id="navbarNav">
             {% if user.is_authenticated %}
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'dashboard' %}">
                         <i class="fas fa-chart-line"></i> Dashboard
@@ -212,21 +227,32 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'pharmacy_list' %}">
-                        <i class="fas fa-store"></i> Pharmacy
+                    <a class="nav-link pharmacy-link" href="{% url 'pharmacy_list' %}">
+                        <i class="fas fa-store"></i> Find Pharmacy
                     </a>
                 </li>
+            </ul>
+            <ul class="navbar-nav">
+                {% if user.pharmacy_owner %}
+                <li class="nav-item">
+                    <a class="nav-link pharmacy-link" href="{% url 'pharmacy_dashboard' %}">
+                        <i class="fas fa-store-alt"></i> My Pharmacy
+                    </a>
+                </li>
+                {% endif %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                        <i class="fas fa-user-circle"></i> {{ user.first_name }}
+                        <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
                     </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" style="color: #f39c12;">
-                            {{ user.get_full_name }}
-                        </a></li>
+                    <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="{% url 'profile' %}">
                             <i class="fas fa-user"></i> Profile
                         </a></li>
+                        {% if not user.pharmacy_owner %}
+                        <li><a class="dropdown-item" href="{% url 'pharmacy_register' %}">
+                            <i class="fas fa-store"></i> Register Pharmacy
+                        </a></li>
+                        {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'logout' %}">
                             <i class="fas fa-sign-out-alt"></i> Logout
@@ -246,6 +272,11 @@
                         <i class="fas fa-user-plus"></i> Sign Up
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link pharmacy-link" href="{% url 'pharmacy_register' %}">
+                        <i class="fas fa-store"></i> Register Pharmacy
+                    </a>
+                </li>
             </ul>
             {% endif %}
         </div>
@@ -259,7 +290,7 @@
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                    <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
@@ -277,13 +308,19 @@
 <!-- Footer -->
 <footer class="footer">
     <div class="container">
-        <p>&copy; {% now "Y" %} DrugTrack - AI Drug Prediction System. All rights reserved.</p>
-        <p class="mb-0">
-            <small>
-                <i class="fas fa-shield-alt"></i> Secure & Confidential | 
-                <i class="fas fa-chart-line"></i> AI-Powered Predictions
-            </small>
-        </p>
+        <div class="row">
+            <div class="col-md-6 text-md-start">
+                <p>&copy; {% now "Y" %} DrugTrack. All rights reserved.</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <p class="mb-0">
+                    <small>
+                        <i class="fas fa-shield-alt"></i> Secure & Confidential | 
+                        <i class="fas fa-chart-line"></i> AI-Powered
+                    </small>
+                </p>
+            </div>
+        </div>
     </div>
 </footer>
 
