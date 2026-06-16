@@ -55,6 +55,8 @@ class PharmacyRegistrationForm(forms.ModelForm):
         # Make latitude and longitude optional
         self.fields['latitude'].required = False
         self.fields['longitude'].required = False
+        self.fields['latitude'].widget = forms.HiddenInput()
+        self.fields['longitude'].widget = forms.HiddenInput()
         self.fields['opens_at'].required = False
         self.fields['closes_at'].required = False
     
