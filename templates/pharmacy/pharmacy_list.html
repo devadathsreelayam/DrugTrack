@@ -120,11 +120,15 @@
                                         {% if item.rating %}
                                         <span class="rating-stars">
                                             {% for i in "12345" %}
-                                            {% if forloop.counter <= item.rating|floatformat:"0" %}
-                                            <i class="fas fa-star"></i>
-                                            {% else %}
-                                            <i class="far fa-star"></i>
-                                            {% endif %}
+                                                {% with num=forloop.counter|add:"0" %}
+                                                    {% if item.rating >= num %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% elif item.rating >= num|add:"-0.5" %}
+                                                        <i class="fas fa-star-half-alt"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endwith %}
                                             {% endfor %}
                                         </span>
                                         <small class="text-muted">({{ item.total_ratings }})</small>
