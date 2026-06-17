@@ -257,62 +257,193 @@ def pharmacy_detail(request, pk):
     return render(request, 'pharmacy/pharmacy_detail.html', context)
 
 
+@login_required
 def pharmacy_search(request):
-    """Search for pharmacies with specific drugs."""
+    """Search for pharmacies with multiple drugs"""
     form = PharmacySearchForm(request.GET or None)
     results = []
     search_performed = False
     
-    user_lat = request.user.latitude if request.user.is_authenticated else None
-    user_lon = request.user.longitude if request.user.is_authenticated else None
+    user_lat = request.user.latitude
+    user_lon = request.user.longitude
     
     if form.is_valid() and request.GET:
         search_performed = True
-        drug_name = form.cleaned_data.get('drug_name')
+        drug_names = form.cleaned_data.get('drug_names', [])
         city = form.cleaned_data.get('city')
+        radius = form.cleaned_data.get('radius', 10)
+        match_type = form.cleaned_data.get('match_type', 'any')
+        
+        # Start with approved pharmacies
         pharmacies = Pharmacy.objects.filter(status='approved', is_active=True)
         
         if city:
             pharmacies = pharmacies.filter(city__icontains=city)
         
-        if drug_name:
-            pharmacy_ids = PharmacyStock.objects.filter(
-                drug__name__icontains=drug_name,
-                is_available=True,
-                available_quantity__gt=0
-            ).values_list('pharmacy_id', flat=True).distinct()
-            pharmacies = pharmacies.filter(id__in=pharmacy_ids)
-        
-        for pharmacy in pharmacies:
-            if user_lat and user_lon and pharmacy.latitude and pharmacy.longitude:
-                distance = haversine_distance(user_lat, user_lon, pharmacy.latitude, pharmacy.longitude)
-            else:
-                distance = None
+        # If drugs provided, find pharmacies with those drugs
+        if drug_names:
+            # Build dynamic Q objects for each drug name
+            q_objects = Q()
+            for name in drug_names:
+                q_objects |= Q(name__icontains=name) | Q(generic_name__icontains=name)
+
+            drug_objects = Drug.objects.filter(q_objects).distinct()
             
-            stock = None
-            if drug_name:
-                stock = PharmacyStock.objects.filter(
-                    pharmacy=pharmacy,
-                    drug__name__icontains=drug_name,
+            # Map drug names to their objects
+            drug_map = {}
+            for drug in drug_objects:
+                for search_name in drug_names:
+                    if search_name.lower() in drug.name.lower() or search_name.lower() in (drug.generic_name or '').lower():
+                        if drug.id not in drug_map:
+                            drug_map[drug.id] = {
+                                'drug': drug,
+                                'search_names': []
+                            }
+                        drug_map[drug.id]['search_names'].append(search_name)
+            
+            # Find pharmacies with stock for these drugs
+            pharmacy_results = {}
+            for drug_id, drug_info in drug_map.items():
+                stock_items = PharmacyStock.objects.filter(
+                    drug_id=drug_id,
                     is_available=True,
                     available_quantity__gt=0
-                ).first()
+                ).select_related('pharmacy', 'drug')
+                
+                for stock in stock_items:
+                    pharmacy_id = stock.pharmacy.id
+                    if pharmacy_id not in pharmacy_results:
+                        pharmacy_results[pharmacy_id] = {
+                            'pharmacy': stock.pharmacy,
+                            'drugs_found': [],
+                            'total_required': len(drug_map)
+                        }
+                    pharmacy_results[pharmacy_id]['drugs_found'].append({
+                        'drug': stock.drug,
+                        'stock': stock,
+                        'search_names': drug_info['search_names']
+                    })
             
-            results.append({
-                'pharmacy': pharmacy,
-                'distance': distance,
-                'stock': stock,
-                'rating': pharmacy.average_rating,
-            })
+            # Filter by match type
+            for pharmacy_id, result in list(pharmacy_results.items()):
+                found_count = len(result['drugs_found'])
+                total_required = result['total_required']
+                
+                if match_type == 'all' and found_count < total_required:
+                    del pharmacy_results[pharmacy_id]
+                elif match_type == 'most' and found_count < total_required / 2:
+                    del pharmacy_results[pharmacy_id]
+                # 'any' keeps all pharmacies with at least one drug
+            
+            # Calculate distances and build results
+            for pharmacy_id, result in pharmacy_results.items():
+                pharmacy = result['pharmacy']
+                
+                # Calculate distance - handle None properly
+                distance = None
+                if user_lat is not None and user_lon is not None:
+                    if pharmacy.latitude is not None and pharmacy.longitude is not None:
+                        try:
+                            distance = haversine_distance(
+                                user_lat, user_lon, 
+                                pharmacy.latitude, pharmacy.longitude
+                            )
+                        except Exception:
+                            distance = None
+                        # Only check radius if distance is not None
+                        if distance is not None and distance > radius:
+                            continue
+                
+                # Check which drugs were found
+                found_drugs = result['drugs_found']
+                found_names = [f['drug'].name for f in found_drugs]
+                missing_names = [name for name in drug_names if name not in found_names]
+                
+                results.append({
+                    'pharmacy': pharmacy,
+                    'distance': distance,
+                    'found_drugs': found_drugs,
+                    'found_count': len(found_drugs),
+                    'total_count': len(drug_names),
+                    'missing_count': len(drug_names) - len(found_drugs),
+                    'missing_drugs': missing_names,
+                    'match_percentage': round((len(found_drugs) / len(drug_names)) * 100) if len(drug_names) > 0 else 0,
+                    'rating': pharmacy.average_rating,
+                    'total_ratings': pharmacy.total_ratings,
+                    'is_open': pharmacy.is_open_now(),
+                })
+            
+            # Sort by match percentage (highest first), then by distance
+            # SAFE sorting with None handling
+            def safe_sort_key(item):
+                match_pct = item.get('match_percentage', 0)
+                dist = item.get('distance')
+                # Convert None to a very large number
+                if dist is None:
+                    dist = 999999999
+                return (-match_pct, dist)
+            
+            results.sort(key=safe_sort_key)
         
-        if user_lat and user_lon:
-            results.sort(key=lambda x: x['distance'] if x['distance'] else float('inf'))
+        else:
+            # No drugs specified, just show nearby pharmacies
+            for pharmacy in pharmacies:
+                distance = None
+                if user_lat is not None and user_lon is not None:
+                    if pharmacy.latitude is not None and pharmacy.longitude is not None:
+                        try:
+                            distance = haversine_distance(
+                                user_lat, user_lon, 
+                                pharmacy.latitude, pharmacy.longitude
+                            )
+                        except Exception:
+                            distance = None
+                        # Only check radius if distance is not None
+                        # if distance is not None and distance > radius:
+                        #     continue
+                
+                stock_count = PharmacyStock.objects.filter(
+                    pharmacy=pharmacy,
+                    is_available=True,
+                    available_quantity__gt=0
+                ).count()
+                
+                results.append({
+                    'pharmacy': pharmacy,
+                    'distance': distance,
+                    'found_drugs': [],
+                    'found_count': 0,
+                    'total_count': 0,
+                    'missing_count': 0,
+                    'missing_drugs': [],
+                    'match_percentage': 0,
+                    'rating': pharmacy.average_rating,
+                    'total_ratings': pharmacy.total_ratings,
+                    'is_open': pharmacy.is_open_now(),
+                    'stock_count': stock_count,
+                })
+            
+            # Sort by distance (handle None values safely)
+            def safe_distance_sort(item):
+                dist = item.get('distance')
+                if dist is None:
+                    return 999999999
+                return dist
+            
+            results.sort(key=safe_distance_sort)
+    
+    # Get popular drugs for suggestions
+    popular_drugs = Drug.objects.filter(
+        pharmacy_stock__is_available=True,
+        pharmacy_stock__available_quantity__gt=0
+    ).distinct().order_by('name')[:20]
     
     context = {
         'form': form,
-        'results': results[:20],
+        'results': results[:30],
         'search_performed': search_performed,
-        'user_location_set': user_lat is not None and user_lon is not None,
+        'user_location_set': user_lat is not None,
+        'popular_drugs': popular_drugs,
     }
     return render(request, 'pharmacy/pharmacy_search.html', context)
 

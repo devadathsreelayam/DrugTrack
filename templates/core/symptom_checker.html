@@ -304,6 +304,8 @@ document.getElementById('symptomForm').addEventListener('submit', async function
 });
 
 function renderResults(data) {
+    const drugNames = data.suggested_drugs ? data.suggested_drugs.map(d => encodeURIComponent(d.name)).join('%0A') : '';
+    
     // Severity color
     const severityColors = {
         'Mild': 'success',
@@ -433,10 +435,12 @@ function renderResults(data) {
         
         <!-- Actions -->
         <div class="mt-3 d-flex gap-2 flex-wrap">
-            <a href="{% url 'pharmacy_search' %}?drug_name=${encodeURIComponent(data.suggested_drugs && data.suggested_drugs[0] ? data.suggested_drugs[0].name : '')}" 
-               class="btn btn-primary">
+            {% if prediction and prediction.suggested_drugs %}
+            <a href="{% url 'pharmacy_search' %}?drug_names={% for drug in prediction.suggested_drugs %}{{ drug.name|urlencode }}{% if not forloop.last %}%0A{% endif %}{% endfor %}" 
+            class="btn btn-primary">
                 <i class="fas fa-store"></i> Find Pharmacies
             </a>
+            {% endif %}
             <button class="btn btn-outline-secondary" onclick="window.location.reload()">
                 <i class="fas fa-redo"></i> New Analysis
             </button>
