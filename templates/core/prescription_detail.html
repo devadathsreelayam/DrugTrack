@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Prescription Details - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-section {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin-bottom: 15px;
+    }
+    .detail-section .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+    .detail-section .value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin: 4px 0 0;
+    }
+    .medicine-detail {
+        background: white;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-bottom: 10px;
+        border-left: 4px solid #2c7da0;
+        border: 1px solid #e2e8f0;
+        border-left-width: 4px;
+    }
+    .medicine-detail .med-name {
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 1.05rem;
+    }
+    .medicine-detail .med-info {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin-top: 4px;
+    }
+    .medicine-detail .med-info span {
+        margin-right: 15px;
+    }
+    .medicine-detail .med-info i {
+        width: 18px;
+        color: #2c7da0;
+    }
+    .prescription-image {
+        max-height: 400px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        width: 100%;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'prescription_list' %}">Prescriptions</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Details</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-file-prescription"></i> Prescription Details
+                    </div>
+                    <small class="text-white-50">
+                        <i class="fas fa-calendar"></i> {{ prescription.prescribed_date|date:"M d, Y" }}
+                    </small>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Diagnosis -->
+                <div class="detail-section">
+                    <div class="label"><i class="fas fa-stethoscope"></i> Diagnosis</div>
+                    <h4 class="value">{{ prescription.diagnosed_disease }}</h4>
+                </div>
+                
+                <!-- Doctor & Hospital -->
+                <div class="row g-3">
+                    {% if prescription.doctor_name %}
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="label"><i class="fas fa-user-md"></i> Doctor</div>
+                            <p class="value">{{ prescription.doctor_name }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if prescription.hospital %}
+                    <div class="col-md-6">
+                        <div class="detail-section">
+                            <div class="label"><i class="fas fa-hospital"></i> Hospital / Clinic</div>
+                            <p class="value">{{ prescription.hospital }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Medicines -->
+                <div class="mt-3">
+                    <h6 class="fw-bold"><i class="fas fa-pills"></i> Prescribed Medicines</h6>
+                    {% if prescription.medicines %}
+                        {% for med in prescription.medicines %}
+                        <div class="medicine-detail">
+                            <div class="med-name">{{ med.name }}</div>
+                            <div class="med-info">
+                                {% if med.dosage %}
+                                <span><i class="fas fa-weight-scale"></i> {{ med.dosage }}</span>
+                                {% endif %}
+                                {% if med.frequency %}
+                                <span><i class="fas fa-clock"></i> {{ med.frequency }}</span>
+                                {% endif %}
+                                {% if med.duration %}
+                                <span><i class="fas fa-calendar"></i> {{ med.duration }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No medicines listed in this prescription.</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Notes -->
+                {% if prescription.notes %}
+                <div class="mt-3">
+                    <h6 class="fw-bold"><i class="fas fa-comment"></i> Notes</h6>
+                    <div class="detail-section">
+                        <p class="value" style="font-weight: 400;">{{ prescription.notes }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Image -->
+                {% if prescription.image %}
+                <div class="mt-3">
+                    <h6 class="fw-bold"><i class="fas fa-image"></i> Prescription Image</h6>
+                    <div class="text-center">
+                        <img src="{{ prescription.image.url }}" class="prescription-image" alt="Prescription">
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Metadata -->
+                <div class="mt-3">
+                    <hr>
+                    <div class="row text-muted small">
+                        <div class="col-md-6">
+                            <i class="fas fa-plus-circle"></i> Added: {{ prescription.created_at|date:"M d, Y H:i" }}
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <i class="fas fa-edit"></i> Updated: {{ prescription.updated_at|date:"M d, Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="mt-4 d-flex gap-2">
+                    <a href="{% url 'prescription_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                    <a href="{% url 'prescription_upload' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New
+                    </a>
+                    <form method="POST" action="{% url 'delete_prescription' prescription.id %}" 
+                          onsubmit="return confirm('Delete this prescription?')" class="d-inline ms-auto">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

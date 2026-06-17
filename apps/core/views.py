@@ -299,30 +299,80 @@ def add_medication(request):
 
 @login_required
 def prescription_upload_view(request):
+    """Upload a new prescription with structured data"""
     if request.method == 'POST':
         form = PrescriptionForm(request.POST, request.FILES)
         if form.is_valid():
             prescription = form.save(commit=False)
             prescription.user = request.user
+            
+            # Parse medicines from textarea
+            medicines_text = request.POST.get('medicines', '')
+            if medicines_text:
+                structured_medicines = []
+                for line in medicines_text.strip().split('\n'):
+                    line = line.strip()
+                    if line:
+                        # Parse: Medicine Name - Dosage - Frequency - Duration
+                        parts = [p.strip() for p in line.split('-')]
+                        if len(parts) >= 1:
+                            med_entry = {
+                                'name': parts[0],
+                                'dosage': parts[1] if len(parts) > 1 else '',
+                                'frequency': parts[2] if len(parts) > 2 else '',
+                                'duration': parts[3] if len(parts) > 3 else '',
+                            }
+                            structured_medicines.append(med_entry)
+                            
+                            # Add to user's medication list
+                            med_name = parts[0].strip()
+                            if med_name:
+                                UserMedication.objects.get_or_create(
+                                    user=request.user,
+                                    medication_name=med_name
+                                )
+                prescription.medicines = structured_medicines
+            
             prescription.save()
-            messages.success(request, 'Prescription uploaded successfully!')
+            messages.success(request, f'✅ Prescription for "{prescription.diagnosed_disease}" added successfully!')
             return redirect('prescription_list')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else:
         form = PrescriptionForm()
     
     return render(request, 'core/prescription_upload.html', {'form': form})
 
+
 @login_required
 def prescription_list_view(request):
-    prescriptions = Prescription.objects.filter(user=request.user).order_by('-uploaded_at')
-    return render(request, 'core/prescription_list.html', {'prescriptions': prescriptions})
+    """List all prescriptions for the user"""
+    prescriptions = Prescription.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'prescriptions': prescriptions,
+        'total': prescriptions.count(),
+    }
+    return render(request, 'core/prescription_list.html', context)
+
+
+@login_required
+def prescription_detail_view(request, pk):
+    """View detailed prescription information"""
+    prescription = get_object_or_404(Prescription, id=pk, user=request.user)
+    return render(request, 'core/prescription_detail.html', {'prescription': prescription})
+
 
 @login_required
 def delete_prescription_view(request, pk):
+    """Delete a prescription"""
     prescription = get_object_or_404(Prescription, id=pk, user=request.user)
+    
     if request.method == 'POST':
+        disease_name = prescription.diagnosed_disease
         prescription.delete()
-        messages.success(request, 'Prescription deleted successfully.')
+        messages.success(request, f'🗑️ Prescription for "{disease_name}" deleted successfully.')
+    
     return redirect('prescription_list')
 
 

@@ -19,6 +19,7 @@ urlpatterns = [
     # Prescription
     path('prescription/upload/', views.prescription_upload_view, name='prescription_upload'),
     path('prescription/list/', views.prescription_list_view, name='prescription_list'),
+    path('prescription/detail/<int:pk>/', views.prescription_detail_view, name='prescription_detail'),
     path('prescription/delete/<int:pk>/', views.delete_prescription_view, name='delete_prescription'),
 
     # Location - Add this

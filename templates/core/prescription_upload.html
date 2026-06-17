@@ -1,43 +1,240 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 
-{% block title %}Upload Prescription - DrugTrack{% endblock %}
+{% block title %}Add Prescription - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .prescription-form .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .prescription-form label {
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .prescription-form .help-text {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-top: 4px;
+    }
+    .medicine-preview {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 10px;
+        display: none;
+        border-left: 4px solid #2c7da0;
+    }
+    .medicine-preview .med-item {
+        padding: 8px 12px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 6px;
+        border: 1px solid #e2e8f0;
+    }
+    .medicine-preview .med-item .med-name {
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .medicine-preview .med-item .med-detail {
+        color: #64748b;
+        font-size: 0.9rem;
+        margin-left: 10px;
+    }
+    .info-box {
+        background: #f0f9ff;
+        border-radius: 10px;
+        padding: 15px 20px;
+        border-left: 4px solid #2c7da0;
+        margin-bottom: 20px;
+    }
+    .info-box i {
+        color: #2c7da0;
+        margin-right: 10px;
+    }
+    .info-box p {
+        margin: 0;
+        color: #475569;
+    }
+</style>
+{% endblock %}
 
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
         <li class="breadcrumb-item"><a href="{% url 'prescription_list' %}">Prescriptions</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Upload</li>
+        <li class="breadcrumb-item active" aria-current="page">Add Prescription</li>
     </ol>
 </nav>
 {% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-9 col-lg-8">
         <div class="card">
             <div class="card-header">
-                <i class="fas fa-file-upload"></i> Upload Prescription
+                <i class="fas fa-file-prescription"></i> Add Prescription
             </div>
             <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle"></i> 
-                    Upload a clear image of your prescription. Supported formats: JPG, PNG, JPEG
+                <div class="info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <p>
+                        <strong>Add your prescription details.</strong> 
+                        Medicines will be automatically added to your profile for drug interaction checks.
+                    </p>
                 </div>
                 
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data" class="prescription-form" id="prescriptionForm">
                     {% csrf_token %}
-                    {{ form|crispy }}
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload"></i> Upload Prescription
-                    </button>
-                    <a href="{% url 'prescription_list' %}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </a>
+                    
+                    <!-- Diagnosis -->
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-stethoscope"></i> Diagnosed Disease <span class="text-danger">*</span>
+                                </label>
+                                {{ form.diagnosed_disease }}
+                                <div class="help-text">{{ form.diagnosed_disease.help_text }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar"></i> Date
+                                </label>
+                                <input type="date" name="prescribed_date" class="form-control" value="{% now 'Y-m-d' %}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Doctor & Hospital -->
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-user-md"></i> Doctor's Name
+                                </label>
+                                {{ form.doctor_name }}
+                                <div class="help-text">{{ form.doctor_name.help_text }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <i class="fas fa-hospital"></i> Hospital / Clinic
+                                </label>
+                                {{ form.hospital }}
+                                <div class="help-text">{{ form.hospital.help_text }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Medicines -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-pills"></i> Prescribed Medicines
+                        </label>
+                        {{ form.medicines }}
+                        <div class="help-text">{{ form.medicines.help_text }}</div>
+                    </div>
+                    
+                    <!-- Medicine Preview -->
+                    <div id="medicinePreview" class="medicine-preview">
+                        <strong><i class="fas fa-list"></i> Medicines Preview</strong>
+                        <div id="medicineList"></div>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-comment"></i> Additional Notes
+                        </label>
+                        {{ form.notes }}
+                        <div class="help-text">{{ form.notes.help_text }}</div>
+                    </div>
+                    
+                    <!-- Image Upload -->
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-image"></i> Upload Prescription Image
+                        </label>
+                        {{ form.image }}
+                        <div class="help-text">Upload a photo of your prescription for reference (optional)</div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <small>
+                            Medicines from your prescription will be added to your 
+                            <a href="{% url 'profile' %}" class="alert-link">profile medications</a> 
+                            for drug interaction checks.
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Prescription
+                        </button>
+                        <a href="{% url 'prescription_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const medicinesTextarea = document.getElementById('id_medicines');
+    const previewDiv = document.getElementById('medicinePreview');
+    const medicineList = document.getElementById('medicineList');
+    
+    // Parse medicines and show preview
+    function updatePreview() {
+        const text = medicinesTextarea.value;
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        if (lines.length === 0) {
+            previewDiv.style.display = 'none';
+            return;
+        }
+        
+        let html = '';
+        lines.forEach(line => {
+            const parts = line.split('-').map(p => p.trim());
+            const name = parts[0] || '';
+            const dosage = parts[1] || '';
+            const frequency = parts[2] || '';
+            const duration = parts[3] || '';
+            
+            if (name) {
+                html += `
+                    <div class="med-item">
+                        <span class="med-name">${name}</span>
+                        ${dosage ? `<span class="med-detail">${dosage}</span>` : ''}
+                        ${frequency ? `<span class="med-detail">• ${frequency}</span>` : ''}
+                        ${duration ? `<span class="med-detail">• ${duration}</span>` : ''}
+                    </div>
+                `;
+            }
+        });
+        
+        if (html) {
+            medicineList.innerHTML = html;
+            previewDiv.style.display = 'block';
+        } else {
+            previewDiv.style.display = 'none';
+        }
+    }
+    
+    medicinesTextarea.addEventListener('input', updatePreview);
+    
+    // Initial preview
+    updatePreview();
+});
+</script>
 {% endblock %}

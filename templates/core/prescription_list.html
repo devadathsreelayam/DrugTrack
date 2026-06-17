@@ -2,6 +2,57 @@
 
 {% block title %}My Prescriptions - DrugTrack{% endblock %}
 
+{% block extra_css %}
+<style>
+    .prescription-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        height: 100%;
+        border: 1px solid #e2e8f0;
+    }
+    .prescription-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .medicine-tag {
+        display: inline-block;
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 3px 14px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 500;
+        margin: 2px 4px 2px 0;
+    }
+    .medicine-tag .dosage {
+        color: #64748b;
+        font-weight: 400;
+        font-size: 12px;
+    }
+    .prescription-date {
+        font-size: 12px;
+        color: #94a3b8;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+    .empty-state h4 {
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+    .empty-state p {
+        color: #94a3b8;
+        max-width: 400px;
+        margin: 0 auto 20px;
+    }
+</style>
+{% endblock %}
+
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
@@ -15,36 +66,74 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">
-                <i class="fas fa-file-prescription"></i> My Prescriptions
-                <a href="{% url 'prescription_upload' %}" class="btn btn-sm btn-primary float-end">
-                    <i class="fas fa-plus"></i> Upload New
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-file-prescription"></i> My Prescriptions
+                    <span class="badge bg-secondary ms-2">{{ prescriptions.count }}</span>
+                </div>
+                <a href="{% url 'prescription_upload' %}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Add Prescription
                 </a>
             </div>
             <div class="card-body">
                 {% if prescriptions %}
                 <div class="row">
                     {% for prescription in prescriptions %}
-                    <div class="col-md-4 mb-4">
-                        <div class="card h-100">
-                            {% if prescription.image %}
-                            <img src="{{ prescription.image.url }}" class="card-img-top" alt="Prescription" style="height: 200px; object-fit: cover;">
-                            {% endif %}
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card prescription-card">
                             <div class="card-body">
-                                <p class="card-text">
-                                    <small class="text-muted">
-                                        <i class="fas fa-calendar"></i> {{ prescription.uploaded_at|date:"Y-m-d H:i" }}
-                                    </small>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title text-primary fw-bold mb-0">
+                                        <i class="fas fa-stethoscope"></i> {{ prescription.diagnosed_disease|truncatechars:30 }}
+                                    </h6>
+                                    <span class="prescription-date">
+                                        {{ prescription.prescribed_date|date:"M d, Y" }}
+                                    </span>
+                                </div>
+                                
+                                {% if prescription.doctor_name %}
+                                <p class="text-muted small mb-2">
+                                    <i class="fas fa-user-md"></i> {{ prescription.doctor_name }}
+                                    {% if prescription.hospital %}
+                                    <span class="ms-2"><i class="fas fa-hospital"></i> {{ prescription.hospital }}</span>
+                                    {% endif %}
                                 </p>
+                                {% endif %}
+                                
+                                <!-- Medicines -->
+                                {% if prescription.medicines %}
+                                <div class="mt-2">
+                                    <small class="text-muted d-block mb-1">Medicines:</small>
+                                    {% for med in prescription.medicines|slice:":3" %}
+                                    <span class="medicine-tag">
+                                        {{ med.name }}
+                                        {% if med.dosage %}
+                                        <span class="dosage">({{ med.dosage }})</span>
+                                        {% endif %}
+                                    </span>
+                                    {% endfor %}
+                                    {% if prescription.medicines|length > 3 %}
+                                    <span class="medicine-tag">+{{ prescription.medicines|length|add:"-3" }} more</span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Notes -->
                                 {% if prescription.notes %}
-                                <p class="card-text">{{ prescription.notes }}</p>
+                                <p class="text-muted small mt-2 mb-0">
+                                    <i class="fas fa-comment"></i> {{ prescription.notes|truncatechars:50 }}
+                                </p>
                                 {% endif %}
                             </div>
-                            <div class="card-footer">
-                                <form method="POST" action="{% url 'delete_prescription' prescription.id %}" onsubmit="return confirm('Are you sure?');">
+                            <div class="card-footer bg-transparent border-top-0 d-flex gap-2">
+                                <a href="{% url 'prescription_detail' prescription.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View Details
+                                </a>
+                                <form method="POST" action="{% url 'delete_prescription' prescription.id %}" 
+                                      onsubmit="return confirm('Delete this prescription?')" class="d-inline">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash"></i> Delete
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </form>
                             </div>
@@ -53,12 +142,12 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <div class="text-center py-5">
-                    <i class="fas fa-file-prescription fa-3x text-muted mb-3"></i>
+                <div class="empty-state">
+                    <i class="fas fa-file-prescription"></i>
                     <h4>No Prescriptions Yet</h4>
-                    <p>Upload your first prescription now.</p>
+                    <p>Add your first prescription to keep track of your medications and health history.</p>
                     <a href="{% url 'prescription_upload' %}" class="btn btn-primary">
-                        <i class="fas fa-upload"></i> Upload Prescription
+                        <i class="fas fa-plus"></i> Add Your First Prescription
                     </a>
                 </div>
                 {% endif %}

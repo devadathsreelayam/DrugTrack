@@ -26,18 +26,32 @@ class SymptomPredictionAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     readonly_fields = ('created_at',)
 
+
 class PrescriptionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'uploaded_at', 'image_tag')
-    list_filter = ('uploaded_at',)
-    search_fields = ('user__username',)
-    readonly_fields = ('uploaded_at',)
+    list_display = ('user', 'diagnosed_disease', 'doctor_name', 'prescribed_date', 'created_at')
+    list_filter = ('prescribed_date', 'created_at')
+    search_fields = ('user__username', 'diagnosed_disease', 'doctor_name', 'hospital')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        ('Patient', {
+            'fields': ('user',)
+        }),
+        ('Prescription Details', {
+            'fields': ('diagnosed_disease', 'doctor_name', 'hospital', 'medicines', 'notes')
+        }),
+        ('Upload', {
+            'fields': ('image',)
+        }),
+        ('Metadata', {
+            'fields': ('prescribed_date', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
     
-    def image_tag(self, obj):
-        if obj.image:
-            return f'<img src="{obj.image.url}" width="50" height="50" />'
-        return '-'
-    image_tag.allow_tags = True
-    image_tag.short_description = 'Preview'
+    def get_medicine_count(self, obj):
+        return len(obj.medicines) if obj.medicines else 0
+    get_medicine_count.short_description = 'Medicines'
+
 
 class MedicineAdmin(admin.ModelAdmin):
     list_display = ('name', 'uses_summary')

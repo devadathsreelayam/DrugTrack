@@ -13,13 +13,71 @@ class SignupForm(UserCreationForm):
         fields = ('username', 'email', 'phone_number', 'gender', 'age', 'address', 'password1', 'password2')
 
 class PrescriptionForm(forms.ModelForm):
+    """Form for creating structured prescriptions"""
+    
     class Meta:
         model = Prescription
-        fields = ('image', 'notes')
+        fields = ['diagnosed_disease', 'doctor_name', 'hospital', 'image', 'notes']
         widgets = {
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'image': forms.FileInput(attrs={'class': 'form-control'}),
+            'diagnosed_disease': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Upper Respiratory Infection'
+            }),
+            'doctor_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Dr. Name'
+            }),
+            'hospital': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Hospital/Clinic name'
+            }),
+            'image': forms.FileInput(attrs={
+                'class': 'form-control'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Additional instructions...'
+            }),
         }
+        help_texts = {
+            'diagnosed_disease': 'What condition was diagnosed?',
+            'doctor_name': 'Name of the prescribing doctor',
+            'hospital': 'Where was this prescribed?',
+        }
+    
+    # Separate field for medicines (will be parsed into JSON)
+    medicines = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 5,
+            'placeholder': 'Enter each medicine on a new line:\nAmoxicillin 500mg - Twice daily - 7 days\nParacetamol 650mg - Three times daily - 5 days'
+        }),
+        help_text='Format: Medicine Name - Dosage - Frequency - Duration (one per line)'
+    )
+    
+    def clean_medicines(self):
+        """Parse medicines textarea into structured data"""
+        medicines_text = self.cleaned_data.get('medicines', '')
+        if not medicines_text:
+            return []
+        
+        structured_medicines = []
+        for line in medicines_text.strip().split('\n'):
+            line = line.strip()
+            if line:
+                parts = [p.strip() for p in line.split('-')]
+                med_entry = {
+                    'name': parts[0] if len(parts) > 0 else '',
+                    'dosage': parts[1] if len(parts) > 1 else '',
+                    'frequency': parts[2] if len(parts) > 2 else '',
+                    'duration': parts[3] if len(parts) > 3 else '',
+                }
+                if med_entry['name']:
+                    structured_medicines.append(med_entry)
+        return structured_medicines
+
 
 class ProfileForm(forms.ModelForm):
     class Meta:

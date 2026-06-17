@@ -51,12 +51,39 @@ class User(AbstractUser):
 
 class Prescription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='prescriptions')
-    image = models.ImageField(upload_to='prescriptions/')
-    notes = models.TextField(blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    
+    # Prescription Details
+    diagnosed_disease = models.CharField(max_length=200, help_text="What was diagnosed?")
+    doctor_name = models.CharField(max_length=200, blank=True, help_text="Doctor's name")
+    hospital = models.CharField(max_length=200, blank=True, help_text="Hospital/Clinic name")
+    
+    # Uploaded image
+    image = models.ImageField(upload_to='prescriptions/', blank=True, null=True, help_text="Upload prescription image (optional)")
+    
+    # Structured Medicines (JSON field)
+    medicines = models.JSONField(default=list, help_text="List of prescribed medicines with details")
+    
+    # Additional Notes
+    notes = models.TextField(blank=True, help_text="Additional instructions or notes")
+    
+    # Metadata
+    prescribed_date = models.DateField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
     
     def __str__(self):
-        return f"{self.user.username} - {self.uploaded_at}"
+        return f"{self.user.username} - {self.diagnosed_disease} - {self.prescribed_date}"
+    
+    def get_medicine_list(self):
+        """Return list of medicine names"""
+        return [med.get('name', '') for med in self.medicines if med.get('name')]
+    
+    def get_medicine_names_string(self):
+        """Return comma-separated medicine names"""
+        return ', '.join(self.get_medicine_list())
 
 class Medicine(models.Model):
     name = models.CharField(max_length=100)
