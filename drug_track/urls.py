@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('apps.core.urls')),
     path('pharmacy/', include('apps.pharmacy.urls')),
+    path('admin-panel/', include('apps.core.admin_urls')),
 ]
 
 if settings.DEBUG:

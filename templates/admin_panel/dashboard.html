@@ -1,74 +1,113 @@
 {% extends 'admin_panel/base_admin.html' %}
 
 {% block admin_content %}
+<!-- Stats Row -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card text-center">
+        <div class="card bg-primary text-white">
             <div class="card-body">
-                <h6 class="text-muted">Total Users</h6>
-                <h3>{{ total_users }}</h3>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Total Users</h6>
+                        <h2 class="mb-0">{{ total_users }}</h2>
+                        <small class="text-white-50">+{{ new_users }} new (30d)</small>
+                    </div>
+                    <i class="fas fa-users fa-2x text-white-50"></i>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center">
+        <div class="card bg-success text-white">
             <div class="card-body">
-                <h6 class="text-muted">Patients</h6>
-                <h3>{{ total_patients }}</h3>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Pharmacies</h6>
+                        <h2 class="mb-0">{{ total_pharmacies }}</h2>
+                        <small class="text-white-50">{{ approved_pharmacies }} approved, {{ pending_pharmacies }} pending</small>
+                    </div>
+                    <i class="fas fa-store fa-2x text-white-50"></i>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center">
+        <div class="card bg-info text-white">
             <div class="card-body">
-                <h6 class="text-muted">Pharmacies</h6>
-                <h3>{{ total_pharmacies }}</h3>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Symptom Checks</h6>
+                        <h2 class="mb-0">{{ total_predictions }}</h2>
+                        <small class="text-white-50">+{{ new_predictions }} new (30d)</small>
+                    </div>
+                    <i class="fas fa-stethoscope fa-2x text-white-50"></i>
+                </div>
             </div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="card text-center">
+        <div class="card bg-warning text-dark">
             <div class="card-body">
-                <h6 class="text-muted">Symptom checks</h6>
-                <h3>{{ total_predictions }}</h3>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-dark-50">Patients</h6>
+                        <h2 class="mb-0">{{ total_patients }}</h2>
+                        <small class="text-dark-50">Active users</small>
+                    </div>
+                    <i class="fas fa-user-md fa-2x text-dark-50"></i>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <strong>Recent symptom checks</strong>
-    </div>
-    <div class="card-body">
-        {% if recent_predictions %}
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Condition</th>
-                            <th>Severity</th>
-                            <th>Confidence</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in recent_predictions %}
-                        <tr>
-                            <td>{{ p.user.username }}</td>
-                            <td>{{ p.predicted_disease }}</td>
-                            <td>{{ p.severity|default:'-' }}</td>
-                            <td>{{ p.confidence_score|default:'-' }}%</td>
-                            <td>{{ p.created_at|date:'M d, Y H:i' }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <strong><i class="fas fa-stethoscope"></i> Recent Symptom Checks</strong>
             </div>
-        {% else %}
-            <p class="mb-0 text-muted">No symptom checks yet.</p>
-        {% endif %}
+            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                {% if recent_predictions %}
+                    {% for p in recent_predictions %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ p.user.username }}</strong>
+                            <span class="badge bg-secondary ms-2">{{ p.predicted_disease|truncatechars:25 }}</span>
+                        </div>
+                        <small class="text-muted">{{ p.created_at|timesince }} ago</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No symptom checks yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <strong><i class="fas fa-store"></i> Recent Pharmacy Registrations</strong>
+            </div>
+            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                {% if recent_pharmacies %}
+                    {% for p in recent_pharmacies %}
+                    <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                        <div>
+                            <strong>{{ p.name }}</strong>
+                            <span class="badge bg-{% if p.status == 'approved' %}success{% elif p.status == 'pending' %}warning{% else %}danger{% endif %} ms-2">
+                                {{ p.get_status_display }}
+                            </span>
+                        </div>
+                        <small class="text-muted">{{ p.created_at|timesince }} ago</small>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No pharmacy registrations yet.</p>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

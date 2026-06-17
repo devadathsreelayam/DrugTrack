@@ -2,91 +2,179 @@
 
 {% block admin_content %}
 <div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>Pharmacies</strong>
-        <form method="get" class="d-flex gap-2">
-            <input type="text" name="search" class="form-control form-control-sm" value="{{ search }}" placeholder="Search pharmacies">
-            <select name="status" class="form-select form-select-sm">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <strong><i class="fas fa-store"></i> Pharmacy Management</strong>
+            <span class="badge bg-secondary ms-2">{{ pharmacies.count }} total</span>
+        </div>
+        <form method="get" class="d-flex gap-2 flex-wrap">
+            <input type="text" name="search" class="form-control form-control-sm" 
+                   value="{{ search }}" placeholder="Search pharmacies..." style="min-width: 180px;">
+            <select name="status" class="form-select form-select-sm" style="min-width: 120px;">
                 <option value="">All statuses</option>
-                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
-                <option value="approved" {% if status == 'approved' %}selected{% endif %}>Approved</option>
-                <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
-                <option value="suspended" {% if status == 'suspended' %}selected{% endif %}>Suspended</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>
+                    Pending ({{ status_counts.pending }})
+                </option>
+                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>
+                    Approved ({{ status_counts.approved }})
+                </option>
+                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>
+                    Rejected ({{ status_counts.rejected }})
+                </option>
+                <option value="suspended" {% if status_filter == 'suspended' %}selected{% endif %}>
+                    Suspended ({{ status_counts.suspended }})
+                </option>
             </select>
-            <button class="btn btn-sm btn-primary">Filter</button>
+            <button class="btn btn-sm btn-primary">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+            <a href="{% url 'admin_pharmacies' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-times"></i> Clear
+            </a>
         </form>
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-sm align-middle">
-                <thead>
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
                     <tr>
-                        <th>Name</th>
+                        <th>Pharmacy</th>
                         <th>Owner</th>
-                        <th>City</th>
+                        <th>Location</th>
                         <th>Status</th>
-                        <th>Phone</th>
+                        <th>License</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for pharmacy in pharmacies %}
                     <tr>
-                        <td>{{ pharmacy.name }}</td>
-                        <td>{{ pharmacy.owner.username|default:'-' }}</td>
-                        <td>{{ pharmacy.city }}</td>
                         <td>
-                            <span class="badge bg-{% if pharmacy.status == 'approved' %}success{% elif pharmacy.status == 'pending' %}warning{% elif pharmacy.status == 'rejected' %}danger{% else %}secondary{% endif %}">
+                            <strong>{{ pharmacy.name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ pharmacy.email }}</small>
+                            {% if pharmacy.verified_badge %}
+                            <span class="badge bg-success"><i class="fas fa-check-circle"></i> Verified</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ pharmacy.owner.username|default:'-' }}</td>
+                        <td>
+                            {{ pharmacy.city }}
+                            <br>
+                            <small class="text-muted">{{ pharmacy.state }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if pharmacy.status == 'approved' %}success{% elif pharmacy.status == 'pending' %}warning{% else %}danger{% endif %}">
                                 {{ pharmacy.get_status_display }}
                             </span>
                         </td>
-                        <td>{{ pharmacy.phone }}</td>
                         <td>
-                            <div class="btn-group btn-group-sm">
+                            {% if pharmacy.license_image %}
+                            <a href="{{ pharmacy.license_image.url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                <i class="fas fa-file-image"></i> View
+                            </a>
+                            {% else %}
+                            <span class="text-muted">No file</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <!-- Approve -->
                                 {% if pharmacy.status != 'approved' %}
                                 <form method="post" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
                                     <input type="hidden" name="action" value="approve">
-                                    <button class="btn btn-outline-success">Approve</button>
+                                    <button class="btn btn-success" title="Approve">
+                                        <i class="fas fa-check"></i>
+                                    </button>
                                 </form>
                                 {% endif %}
-                                {% if not pharmacy.verified_badge %}
-                                <form method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
-                                    <input type="hidden" name="action" value="verify">
-                                    <button class="btn btn-outline-primary">Verify</button>
-                                </form>
+                                
+                                <!-- Verify/Unverify -->
+                                {% if pharmacy.status == 'approved' %}
+                                    {% if not pharmacy.verified_badge %}
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
+                                        <input type="hidden" name="action" value="verify">
+                                        <button class="btn btn-info" title="Verify">
+                                            <i class="fas fa-badge-check"></i>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
+                                        <input type="hidden" name="action" value="unverify">
+                                        <button class="btn btn-outline-info" title="Unverify">
+                                            <i class="fas fa-times-circle"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
                                 {% endif %}
-                                {% if pharmacy.status != 'rejected' %}
+                                
+                                <!-- Reject -->
+                                {% if pharmacy.status != 'rejected' and pharmacy.status != 'approved' %}
                                 <form method="post" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
                                     <input type="hidden" name="action" value="reject">
-                                    <button class="btn btn-outline-danger">Reject</button>
+                                    <button class="btn btn-danger" title="Reject" 
+                                            onclick="return confirm('Reject {{ pharmacy.name }}?')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
                                 </form>
                                 {% endif %}
-                                {% if pharmacy.status != 'suspended' %}
+                                
+                                <!-- Suspend -->
+                                {% if pharmacy.status != 'suspended' and pharmacy.status != 'rejected' %}
                                 <form method="post" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
                                     <input type="hidden" name="action" value="suspend">
-                                    <button class="btn btn-outline-secondary">Suspend</button>
+                                    <button class="btn btn-warning" title="Suspend"
+                                            onclick="return confirm('Suspend {{ pharmacy.name }}?')">
+                                        <i class="fas fa-pause"></i>
+                                    </button>
                                 </form>
                                 {% endif %}
+                                
+                                <!-- Restore -->
+                                {% if pharmacy.status == 'suspended' or pharmacy.status == 'rejected' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
+                                    <input type="hidden" name="action" value="restore">
+                                    <button class="btn btn-secondary" title="Restore"
+                                            onclick="return confirm('Restore {{ pharmacy.name }} to pending?')">
+                                        <i class="fas fa-undo"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                
+                                <!-- Remove -->
                                 <form method="post" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
                                     <input type="hidden" name="action" value="remove">
-                                    <button class="btn btn-outline-dark" onclick="return confirm('Remove this pharmacy permanently?')">Remove</button>
+                                    <button class="btn btn-dark" title="Remove permanently"
+                                            onclick="return confirm('Permanently remove {{ pharmacy.name }}? This cannot be undone!')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-muted">No pharmacies found.</td>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            <i class="fas fa-store fa-2x d-block mb-2"></i>
+                            No pharmacies found.
+                            {% if search or status_filter %}
+                            Try clearing your filters.
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -2,7 +2,14 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 class User(AbstractUser):
-    # Extend default User model
+    USER_TYPES = [
+        ('admin', 'Admin'),
+        ('patient', 'Patient'),
+        ('pharmacy_owner', 'Pharmacy Owner'),
+        ('both', 'Both'),
+    ]
+    
+    user_type = models.CharField(max_length=20, choices=USER_TYPES, default='patient')
     phone_number = models.CharField(max_length=15, blank=True)
     gender = models.CharField(max_length=10, choices=[
         ('M', 'Male'),
@@ -19,27 +26,28 @@ class User(AbstractUser):
     
     @property
     def pharmacy(self):
-        """Get the pharmacy linked to this user, if any."""
         from apps.pharmacy.models import Pharmacy
         return Pharmacy.objects.filter(owner=self).first()
 
     @property
     def pharmacy_status(self):
-        """Return the pharmacy registration status for this user."""
         pharmacy = self.pharmacy
         return pharmacy.status if pharmacy else 'none'
     
     @property
     def is_pharmacy_owner(self):
-        """Check if user owns a pharmacy record, regardless of approval state."""
         from apps.pharmacy.models import Pharmacy
         return Pharmacy.objects.filter(owner=self).exists()
     
     @property
     def has_pharmacy_license(self):
-        """Check if user has an approved pharmacy record."""
         from apps.pharmacy.models import Pharmacy
         return Pharmacy.objects.filter(owner=self, status='approved').exists()
+    
+    @property
+    def is_patient(self):
+        return self.user_type in ['patient', 'both']
+    
 
 class Prescription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='prescriptions')

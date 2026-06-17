@@ -9,7 +9,7 @@ class CustomUserAdmin(UserAdmin):
     
     fieldsets = UserAdmin.fieldsets + (
         ('Additional Info', {
-            'fields': ('phone_number', 'gender', 'age', 'address', 'latitude', 'longitude')
+            'fields': ('user_type', 'phone_number', 'gender', 'age', 'address', 'latitude', 'longitude')
         }),
     )
     

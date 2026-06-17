@@ -30,9 +30,4 @@ urlpatterns = [
     path('analyze-symptoms/', views.analyze_symptoms_api, name='analyze_symptoms'),
     path('symptom-detail/<int:pk>/', views.symptom_detail_view, name='symptom_detail'),
 
-    # Admin panel
-    path('admin-panel/', views.admin_dashboard, name='admin_dashboard'),
-    path('admin-panel/users/', views.admin_users, name='admin_users'),
-    path('admin-panel/predictions/', views.admin_predictions, name='admin_predictions'),
-    path('admin-panel/pharmacies/', views.admin_pharmacies, name='admin_pharmacies'),
 ]
