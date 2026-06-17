@@ -5,58 +5,324 @@
 
 {% block extra_css %}
 <style>
-    .form-check {
-        margin-bottom: 10px;
+    .medication-card {
+        border-radius: 15px;
+        overflow: hidden;
     }
-    .form-check-input {
-        margin-right: 10px;
+    
+    .medication-card .card-header {
+        background: linear-gradient(135deg, #2c7da0, #61a5c2);
+        color: white;
+        padding: 1rem 1.5rem;
+        border: none;
     }
-    .medication-group {
-        max-height: 300px;
+    
+    .medication-search {
+        position: relative;
+    }
+    
+    .medication-search input {
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        padding: 10px 15px 10px 40px;
+        width: 100%;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+    
+    .medication-search input:focus {
+        border-color: #2c7da0;
+        box-shadow: 0 0 0 3px rgba(44,125,160,0.1);
+        outline: none;
+    }
+    
+    .medication-search i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+    
+    .medication-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 8px;
+        max-height: 250px;
         overflow-y: auto;
-        padding: 10px;
-        border: 1px solid #ddd;
+        padding: 12px 15px;
+        background: #f8fafc;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+    }
+    
+    .medication-grid::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .medication-grid::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+    
+    .medication-grid::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    
+    .medication-check {
+        display: flex;
+        align-items: center;
+        padding: 6px 10px;
         border-radius: 8px;
-        margin-bottom: 15px;
+        transition: all 0.2s;
+        cursor: pointer;
+        background: white;
+        border: 1px solid transparent;
+    }
+    
+    .medication-check:hover {
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+    }
+    
+    .medication-check input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+        flex-shrink: 0;
+        accent-color: #2c7da0;
+        cursor: pointer;
+    }
+    
+    .medication-check label {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: #0f172a;
+        cursor: pointer;
+    }
+    
+    .medication-check .med-tag {
+        font-size: 10px;
+        padding: 1px 8px;
+        border-radius: 10px;
+        background: #e0f2fe;
+        color: #0369a1;
+        margin-left: auto;
+        font-weight: 500;
+    }
+    
+    .medication-check .med-tag.otc {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .medication-check .med-tag.prescription {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 20px;
+        color: #94a3b8;
+        font-size: 14px;
+        grid-column: 1 / -1;
+    }
+    
+    .other-meds-input {
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        padding: 12px 16px;
+        width: 100%;
+        transition: all 0.3s;
+        font-size: 14px;
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .other-meds-input:focus {
+        border-color: #2c7da0;
+        box-shadow: 0 0 0 3px rgba(44,125,160,0.1);
+        outline: none;
+    }
+    
+    .selected-count {
+        background: #2c7da0;
+        color: white;
+        padding: 2px 12px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .medication-chip {
+        display: inline-block;
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 4px 14px;
+        border-radius: 15px;
+        font-size: 13px;
+        margin: 3px 5px 3px 0;
+        font-weight: 500;
+    }
+    
+    .medication-chip .remove-med {
+        margin-left: 8px;
+        cursor: pointer;
+        color: #0369a1;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        font-weight: 700;
+    }
+    
+    .medication-chip .remove-med:hover {
+        opacity: 1;
+    }
+    
+    .quick-add {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 10px 0;
+    }
+    
+    .quick-add-btn {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        padding: 4px 14px;
+        border-radius: 15px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #475569;
+    }
+    
+    .quick-add-btn:hover {
+        background: #e2e8f0;
+        border-color: #2c7da0;
+        color: #2c7da0;
+    }
+    
+    .quick-add-btn.active {
+        background: #2c7da0;
+        border-color: #2c7da0;
+        color: white;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-7 col-lg-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-4 p-md-5">
-                <div class="text-center mb-4">
-                    <span class="badge rounded-pill bg-light text-primary mb-3">Step 4 of 4</span>
-                    <h3 class="mb-2">Current medications</h3>
-                    <p class="text-muted mb-0">Optional, but useful for safety checks</p>
+    <div class="col-md-8 col-lg-7">
+        <div class="card shadow-sm border-0 medication-card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-light text-primary me-2">Step 4 of 4</span>
+                        <span class="fw-bold">Current Medications</span>
+                    </div>
+                    <span class="selected-count" id="selectedCount">0 selected</span>
                 </div>
-                <div class="progress mb-4" style="height: 8px;">
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-3">
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-info-circle text-primary"></i>
+                        Optional, but helps us check for drug interactions
+                    </p>
+                </div>
+                
+                <div class="progress mb-4" style="height: 6px;">
                     <div class="progress-bar bg-success" style="width: 100%"></div>
                 </div>
                 
-                <form method="POST">
+                <form method="POST" id="medicationForm">
                     {% csrf_token %}
                     
+                    <!-- Search Box -->
+                    <div class="medication-search mb-3">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="medSearch" placeholder="Search for a medication..." class="form-control">
+                    </div>
+                    
+                    <!-- Common Medications Grid -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Select common medications:</label>
-                        <div class="medication-group">
-                            {{ form.medications }}
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-pills text-primary"></i> Common Medications
+                        </label>
+                        <div class="medication-grid" id="medicationGrid">
+                            {% for choice in form.medications.field.choices %}
+                            <div class="medication-check" data-name="{{ choice.1|lower }}">
+                                <input type="checkbox" 
+                                       name="medications" 
+                                       value="{{ choice.0 }}" 
+                                       id="med_{{ choice.0 }}"
+                                       {% if choice.0 in current_meds %}checked{% endif %}>
+                                <label for="med_{{ choice.0 }}">{{ choice.1 }}</label>
+                                <span class="med-tag {% if 'Aspirin' in choice.1 or 'Omeprazole' in choice.1 %}otc{% else %}prescription{% endif %}">
+                                    {% if 'Aspirin' in choice.1 or 'Omeprazole' in choice.1 %}OTC{% else %}Rx{% endif %}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div id="noResults" class="no-results" style="display: none;">
+                            <i class="fas fa-search fa-2x d-block mb-2"></i>
+                            No medications found
                         </div>
                     </div>
                     
+                    <!-- Quick Add -->
                     <div class="mb-3">
-                        <label class="form-label fw-bold">Other medications:</label>
+                        <label class="form-label fw-bold small">
+                            <i class="fas fa-bolt text-warning"></i> Quick Add
+                        </label>
+                        <div class="quick-add">
+                            <span class="quick-add-btn" onclick="quickAdd('Paracetamol')">Paracetamol</span>
+                            <span class="quick-add-btn" onclick="quickAdd('Aspirin')">Aspirin</span>
+                            <span class="quick-add-btn" onclick="quickAdd('Ibuprofen')">Ibuprofen</span>
+                            <span class="quick-add-btn" onclick="quickAdd('Metformin')">Metformin</span>
+                            <span class="quick-add-btn" onclick="quickAdd('Amlodipine')">Amlodipine</span>
+                            <span class="quick-add-btn" onclick="quickAdd('Atorvastatin')">Atorvastatin</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Other Medications -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-plus-circle text-success"></i> Other Medications
+                        </label>
                         {{ form.other_medications }}
-                        <small class="text-muted">Separate multiple medications with commas</small>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle"></i> 
+                                Separate multiple medications with commas
+                            </small>
+                            <small class="text-muted" id="otherCount">0 character</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Selected Medications Preview -->
+                    <div id="selectedPreview" class="mb-3" style="display: none;">
+                        <label class="form-label fw-bold small">
+                            <i class="fas fa-check-circle text-success"></i> Selected Medications
+                        </label>
+                        <div id="selectedTags"></div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-2 mb-3">
+                        <i class="fas fa-shield-alt"></i>
+                        <small>
+                            Your medication list is private and will only be used for drug interaction checks.
+                        </small>
                     </div>
                     
                     <div class="d-flex gap-2 mt-3">
                         <a href="{% url 'signup_stage3' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left"></i> Back
                         </a>
-                        <button type="submit" class="btn btn-success btn-lg flex-grow-1">
+                        <button type="submit" class="btn btn-success btn-lg flex-grow-1" id="completeBtn">
                             <i class="fas fa-check-circle"></i> Complete Setup
                         </button>
                     </div>
@@ -65,4 +331,119 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('medSearch');
+    const grid = document.getElementById('medicationGrid');
+    const noResults = document.getElementById('noResults');
+    const selectedCount = document.getElementById('selectedCount');
+    const selectedPreview = document.getElementById('selectedPreview');
+    const selectedTags = document.getElementById('selectedTags');
+    const otherInput = document.querySelector('textarea[name="other_medications"]');
+    const otherCount = document.getElementById('otherCount');
+    const checkboxes = document.querySelectorAll('input[name="medications"]');
+    
+    // Count characters in other medications
+    if (otherInput) {
+        otherInput.addEventListener('input', function() {
+            const count = this.value.length;
+            otherCount.textContent = count + ' characters';
+        });
+    }
+    
+    // Search filter
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const query = this.value.toLowerCase().trim();
+            const items = grid.querySelectorAll('.medication-check');
+            let visible = 0;
+            
+            items.forEach(item => {
+                const name = item.dataset.name;
+                if (name.includes(query)) {
+                    item.style.display = 'flex';
+                    visible++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            noResults.style.display = visible === 0 ? 'block' : 'none';
+        });
+    }
+    
+    // Update selected count and preview
+    function updateSelected() {
+        const checked = document.querySelectorAll('input[name="medications"]:checked');
+        const count = checked.length;
+        selectedCount.textContent = count + ' selected';
+        
+        if (count > 0) {
+            selectedPreview.style.display = 'block';
+            let html = '';
+            checked.forEach(cb => {
+                const label = cb.nextElementSibling.textContent;
+                html += `<span class="medication-chip">
+                            ${label}
+                            <span class="remove-med" onclick="deselectMed('${cb.value}')">✕</span>
+                        </span>`;
+            });
+            selectedTags.innerHTML = html;
+        } else {
+            selectedPreview.style.display = 'none';
+        }
+    }
+    
+    // Deselect medication
+    window.deselectMed = function(value) {
+        const cb = document.querySelector(`input[name="medications"][value="${value}"]`);
+        if (cb) {
+            cb.checked = false;
+            updateSelected();
+        }
+    };
+    
+    // Quick add
+    window.quickAdd = function(name) {
+        const items = document.querySelectorAll('.medication-check');
+        items.forEach(item => {
+            const label = item.querySelector('label');
+            if (label && label.textContent.trim() === name) {
+                const cb = item.querySelector('input[type="checkbox"]');
+                if (cb) {
+                    cb.checked = true;
+                    updateSelected();
+                    // Scroll to the checked item
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    item.style.background = '#dbeafe';
+                    setTimeout(() => item.style.background = '', 1500);
+                }
+            }
+        });
+    };
+    
+    // Event listeners
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateSelected);
+    });
+    
+    // Initial update
+    updateSelected();
+    
+    // Update form submission message
+    const form = document.getElementById('medicationForm');
+    form.addEventListener('submit', function(e) {
+        const btn = document.getElementById('completeBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting up...';
+    });
+});
+
+// Auto-resize textarea
+document.querySelector('textarea[name="other_medications"]')?.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = (this.scrollHeight) + 'px';
+});
+</script>
 {% endblock %}
