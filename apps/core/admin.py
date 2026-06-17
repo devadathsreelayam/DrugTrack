@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Prediction, Prescription, Medicine
+from .models import User, Prescription, Medicine, SymptomPrediction
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'phone_number', 'gender', 'age', 'is_staff', 'date_joined')
@@ -19,10 +19,10 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
-class PredictionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'predicted_drug', 'age', 'sex', 'bp', 'cholesterol', 'created_at')
-    list_filter = ('predicted_drug', 'bp', 'cholesterol', 'created_at')
-    search_fields = ('user__username', 'predicted_drug')
+class SymptomPredictionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'predicted_disease', 'severity', 'confidence_score', 'created_at')
+    list_filter = ('severity', 'created_at')
+    search_fields = ('user__username', 'predicted_disease', 'symptoms')
     date_hierarchy = 'created_at'
     readonly_fields = ('created_at',)
 
@@ -48,6 +48,6 @@ class MedicineAdmin(admin.ModelAdmin):
     uses_summary.short_description = 'Uses'
 
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(Prediction, PredictionAdmin)
+admin.site.register(SymptomPrediction, SymptomPredictionAdmin)
 admin.site.register(Prescription, PrescriptionAdmin)
 admin.site.register(Medicine, MedicineAdmin)

@@ -22,7 +22,7 @@
     <div class="col-md-4">
         <div class="stat-card">
             <i class="fas fa-stethoscope"></i>
-            <h3>{{ total_predictions }}</h3>
+            <h3>{{ total_symptom_checks }}</h3>
             <p>Symptom checks</p>
         </div>
     </div>
@@ -37,29 +37,29 @@
         <div class="stat-card">
             <i class="fas fa-heartbeat"></i>
             <h3>{{ health_profile.bp|default:'—' }}</h3>
-            <p>Latest BP status</p>
+            <p>Health profile</p>
         </div>
     </div>
 </div>
 
-{% if latest_metrics %}
+{% if latest_symptom %}
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">Latest health summary</div>
+            <div class="card-header">Latest symptom review</div>
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-md-4">
-                        <h5>Blood Pressure</h5>
-                        <p class="fs-4 mb-0 text-primary">{{ latest_metrics.bp }}</p>
+                        <h5>Condition</h5>
+                        <p class="fs-4 mb-0 text-primary">{{ latest_symptom.predicted_disease }}</p>
                     </div>
                     <div class="col-md-4">
-                        <h5>Cholesterol</h5>
-                        <p class="fs-4 mb-0 text-primary">{{ latest_metrics.cholesterol }}</p>
+                        <h5>Severity</h5>
+                        <p class="fs-4 mb-0 text-primary">{{ latest_symptom.severity }}</p>
                     </div>
                     <div class="col-md-4">
-                        <h5>Suggested Drug</h5>
-                        <p class="fs-4 mb-0 text-primary">{{ latest_metrics.drug }}</p>
+                        <h5>Confidence</h5>
+                        <p class="fs-4 mb-0 text-primary">{{ latest_symptom.confidence_score }}%</p>
                     </div>
                 </div>
             </div>
@@ -105,22 +105,24 @@
         <div class="card">
             <div class="card-header">Recent checks</div>
             <div class="card-body">
-                {% if recent_predictions %}
+                {% if recent_symptom_checks %}
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>Predicted drug</th>
+                                <th>Condition</th>
+                                <th>Severity</th>
                                 <th>Confidence</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for pred in recent_predictions %}
+                            {% for pred in recent_symptom_checks %}
                             <tr>
                                 <td>{{ pred.created_at|date:"Y-m-d H:i" }}</td>
-                                <td>{{ pred.predicted_drug }}</td>
-                                <td>{{ pred.confidence_score|default:85 }}%</td>
+                                <td>{{ pred.predicted_disease }}</td>
+                                <td>{{ pred.severity }}</td>
+                                <td>{{ pred.confidence_score }}%</td>
                             </tr>
                             {% endfor %}
                         </tbody>

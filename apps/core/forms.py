@@ -12,18 +12,6 @@ class SignupForm(UserCreationForm):
         model = User
         fields = ('username', 'email', 'phone_number', 'gender', 'age', 'address', 'password1', 'password2')
 
-class PredictionForm(forms.Form):
-    AGE_CHOICES = [(i, i) for i in range(1, 121)]
-    SEX_CHOICES = [('M', 'Male'), ('F', 'Female')]
-    BP_CHOICES = [('HIGH', 'High'), ('LOW', 'Low'), ('NORMAL', 'Normal')]
-    CHOL_CHOICES = [('HIGH', 'High'), ('NORMAL', 'Normal')]
-    
-    age = forms.ChoiceField(choices=AGE_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
-    sex = forms.ChoiceField(choices=SEX_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
-    bp = forms.ChoiceField(choices=BP_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
-    cholesterol = forms.ChoiceField(choices=CHOL_CHOICES, widget=forms.Select(attrs={'class': 'form-select'}))
-    na_to_k = forms.FloatField(min_value=5.0, max_value=40.0, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
-
 class PrescriptionForm(forms.ModelForm):
     class Meta:
         model = Prescription

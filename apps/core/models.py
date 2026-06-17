@@ -41,23 +41,6 @@ class User(AbstractUser):
         from apps.pharmacy.models import Pharmacy
         return Pharmacy.objects.filter(owner=self, status='approved').exists()
 
-class Prediction(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='predictions')
-    age = models.IntegerField()
-    sex = models.CharField(max_length=1)  # M or F
-    bp = models.CharField(max_length=10)  # HIGH, LOW, NORMAL
-    cholesterol = models.CharField(max_length=10)  # HIGH, NORMAL
-    na_to_k = models.FloatField()
-    predicted_drug = models.CharField(max_length=50)
-    confidence_score = models.FloatField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['-created_at']
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.predicted_drug} - {self.created_at}"
-
 class Prescription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='prescriptions')
     image = models.ImageField(upload_to='prescriptions/')

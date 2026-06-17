@@ -26,6 +26,7 @@
                         <th>City</th>
                         <th>Status</th>
                         <th>Phone</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,10 +41,52 @@
                             </span>
                         </td>
                         <td>{{ pharmacy.phone }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                {% if pharmacy.status != 'approved' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
+                                    <input type="hidden" name="action" value="approve">
+                                    <button class="btn btn-outline-success">Approve</button>
+                                </form>
+                                {% endif %}
+                                {% if not pharmacy.verified_badge %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
+                                    <input type="hidden" name="action" value="verify">
+                                    <button class="btn btn-outline-primary">Verify</button>
+                                </form>
+                                {% endif %}
+                                {% if pharmacy.status != 'rejected' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
+                                    <input type="hidden" name="action" value="reject">
+                                    <button class="btn btn-outline-danger">Reject</button>
+                                </form>
+                                {% endif %}
+                                {% if pharmacy.status != 'suspended' %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
+                                    <input type="hidden" name="action" value="suspend">
+                                    <button class="btn btn-outline-secondary">Suspend</button>
+                                </form>
+                                {% endif %}
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="pharmacy_id" value="{{ pharmacy.id }}">
+                                    <input type="hidden" name="action" value="remove">
+                                    <button class="btn btn-outline-dark" onclick="return confirm('Remove this pharmacy permanently?')">Remove</button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-muted">No pharmacies found.</td>
+                        <td colspan="6" class="text-muted">No pharmacies found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>

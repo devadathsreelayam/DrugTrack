@@ -3,14 +3,14 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from django.db.models import Count, Avg, Q
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.core.paginator import Paginator
+from django.utils import timezone
 
 from apps.pharmacy.models import Drug, Pharmacy
 from .forms import *
-from .models import User, Prediction, Prescription, Medicine, UserHealthProfile, UserMedication, SymptomPrediction
-# from .utils.ml_predictor import predictor
+from .models import User, Prescription, Medicine, UserHealthProfile, UserMedication, SymptomPrediction
 from datetime import datetime
 import math
 
@@ -22,12 +22,12 @@ from django.views.decorators.http import require_http_methods
 
 @staff_member_required
 def admin_dashboard(request):
-    """Simple admin dashboard for managing pharmacies, patients, and predictions."""
+    """Simple admin dashboard for managing pharmacies, patients, and symptom checks."""
     total_users = User.objects.count()
     total_patients = User.objects.filter(is_staff=False).count()
     total_pharmacies = Pharmacy.objects.count()
-    total_predictions = Prediction.objects.count()
-    recent_predictions = Prediction.objects.select_related('user').order_by('-created_at')[:8]
+    total_predictions = SymptomPrediction.objects.count()
+    recent_predictions = SymptomPrediction.objects.select_related('user').order_by('-created_at')[:8]
 
     context = {
         'total_users': total_users,
@@ -56,13 +56,14 @@ def admin_users(request):
 
 @staff_member_required
 def admin_predictions(request):
-    """List symptom predictions made by users."""
-    predictions = Prediction.objects.select_related('user').order_by('-created_at')
+    """List symptom analyses made by users."""
+    predictions = SymptomPrediction.objects.select_related('user').order_by('-created_at')
     search = request.GET.get('search', '')
     if search:
         predictions = predictions.filter(
             Q(user__username__icontains=search) |
-            Q(predicted_drug__icontains=search)
+            Q(predicted_disease__icontains=search) |
+            Q(symptoms__icontains=search)
         )
     return render(request, 'admin_panel/predictions.html', {'predictions': predictions, 'search': search})
 
@@ -70,6 +71,41 @@ def admin_predictions(request):
 @staff_member_required
 def admin_pharmacies(request):
     """List and update pharmacy records."""
+    if request.method == 'POST':
+        pharmacy_id = request.POST.get('pharmacy_id')
+        action = request.POST.get('action')
+        pharmacy = get_object_or_404(Pharmacy, id=pharmacy_id)
+        reason = request.POST.get('reason', '').strip()
+
+        if action == 'approve':
+            pharmacy.status = 'approved'
+            pharmacy.is_active = True
+            pharmacy.approved_at = timezone.now()
+            pharmacy.approved_by = request.user
+            pharmacy.rejection_reason = ''
+            pharmacy.save()
+            messages.success(request, f'{pharmacy.name} approved successfully.')
+        elif action == 'verify':
+            pharmacy.verified_badge = True
+            pharmacy.save()
+            messages.success(request, f'{pharmacy.name} marked as verified.')
+        elif action == 'reject':
+            pharmacy.status = 'rejected'
+            pharmacy.is_active = False
+            pharmacy.rejection_reason = reason or 'Rejected by admin.'
+            pharmacy.save()
+            messages.warning(request, f'{pharmacy.name} rejected.')
+        elif action == 'suspend':
+            pharmacy.status = 'suspended'
+            pharmacy.is_active = False
+            pharmacy.rejection_reason = reason or 'Suspended by admin.'
+            pharmacy.save()
+            messages.warning(request, f'{pharmacy.name} suspended.')
+        elif action == 'remove':
+            pharmacy.delete()
+            messages.success(request, 'Pharmacy removed successfully.')
+        return redirect('admin_pharmacies')
+
     pharmacies = Pharmacy.objects.select_related('owner').order_by('-created_at')
     search = request.GET.get('search', '')
     status = request.GET.get('status', '')
@@ -288,31 +324,21 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     user = request.user
-    total_predictions = Prediction.objects.filter(user=user).count()
-    latest_prediction = Prediction.objects.filter(user=user).first()
+    total_symptom_checks = SymptomPrediction.objects.filter(user=user).count()
+    recent_symptom_checks = SymptomPrediction.objects.filter(user=user).order_by('-created_at')[:5]
+    latest_symptom = SymptomPrediction.objects.filter(user=user).first()
     total_prescriptions = Prescription.objects.filter(user=user).count()
-    recent_predictions = Prediction.objects.filter(user=user)[:5]
 
     health_profile = getattr(user, 'health_profile', None)
     profile_complete = bool(
         user.first_name and user.last_name and user.phone_number and user.gender and user.age
     )
 
-    latest_metrics = None
-    if latest_prediction:
-        latest_metrics = {
-            'bp': latest_prediction.bp,
-            'cholesterol': latest_prediction.cholesterol,
-            'drug': latest_prediction.predicted_drug,
-            'created_at': latest_prediction.created_at,
-        }
-
     context = {
-        'total_predictions': total_predictions,
-        'latest_prediction': latest_prediction,
+        'total_symptom_checks': total_symptom_checks,
+        'latest_symptom': latest_symptom,
         'total_prescriptions': total_prescriptions,
-        'latest_metrics': latest_metrics,
-        'recent_predictions': recent_predictions,
+        'recent_symptom_checks': recent_symptom_checks,
         'profile_complete': profile_complete,
         'health_profile': health_profile,
     }
@@ -330,18 +356,13 @@ def profile_view(request):
     else:
         form = ProfileForm(instance=request.user)
     
-    # Get user stats
-    total_predictions = Prediction.objects.filter(user=request.user).count()
+    total_symptom_checks = SymptomPrediction.objects.filter(user=request.user).count()
     total_prescriptions = Prescription.objects.filter(user=request.user).count()
-    most_predicted = Prediction.objects.filter(user=request.user).values('predicted_drug').annotate(
-        count=Count('predicted_drug')
-    ).order_by('-count').first()
     
     context = {
         'form': form,
-        'total_predictions': total_predictions,
+        'total_symptom_checks': total_symptom_checks,
         'total_prescriptions': total_prescriptions,
-        'most_predicted': most_predicted,
     }
     return render(request, 'core/profile.html', context)
 

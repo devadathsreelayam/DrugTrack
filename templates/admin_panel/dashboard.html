@@ -29,7 +29,7 @@
     <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
-                <h6 class="text-muted">Predictions</h6>
+                <h6 class="text-muted">Symptom checks</h6>
                 <h3>{{ total_predictions }}</h3>
             </div>
         </div>
@@ -38,7 +38,7 @@
 
 <div class="card">
     <div class="card-header">
-        <strong>Recent Predictions</strong>
+        <strong>Recent symptom checks</strong>
     </div>
     <div class="card-body">
         {% if recent_predictions %}
@@ -47,7 +47,8 @@
                     <thead>
                         <tr>
                             <th>User</th>
-                            <th>Drug</th>
+                            <th>Condition</th>
+                            <th>Severity</th>
                             <th>Confidence</th>
                             <th>Date</th>
                         </tr>
@@ -56,8 +57,9 @@
                         {% for p in recent_predictions %}
                         <tr>
                             <td>{{ p.user.username }}</td>
-                            <td>{{ p.predicted_drug }}</td>
-                            <td>{{ p.confidence_score|default:'-' }}</td>
+                            <td>{{ p.predicted_disease }}</td>
+                            <td>{{ p.severity|default:'-' }}</td>
+                            <td>{{ p.confidence_score|default:'-' }}%</td>
                             <td>{{ p.created_at|date:'M d, Y H:i' }}</td>
                         </tr>
                         {% endfor %}
@@ -65,7 +67,7 @@
                 </table>
             </div>
         {% else %}
-            <p class="mb-0 text-muted">No predictions yet.</p>
+            <p class="mb-0 text-muted">No symptom checks yet.</p>
         {% endif %}
     </div>
 </div>
