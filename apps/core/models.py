@@ -172,6 +172,9 @@ class SymptomPrediction(models.Model):
     reasoning = models.TextField()
     suggested_drugs = models.JSONField(default=list)
     common_symptoms_matched = models.JSONField(default=list)
+    drug_interactions = models.JSONField(default=list, blank=True)
+    safety_precautions = models.JSONField(default=list, blank=True)
+    when_to_see_doctor = models.TextField(blank=True)
     full_response = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -180,3 +183,11 @@ class SymptomPrediction(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.predicted_disease} - {self.created_at}"
+    
+    def get_primary_drugs(self):
+        """Get only primary (non-alternative) drugs"""
+        return [drug for drug in self.suggested_drugs if not drug.get('is_alternative', False)]
+    
+    def get_alternative_drugs(self):
+        """Get only alternative drugs"""
+        return [drug for drug in self.suggested_drugs if drug.get('is_alternative', False)]

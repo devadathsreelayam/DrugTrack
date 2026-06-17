@@ -429,7 +429,7 @@ def symptom_checker_view(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def analyze_symptoms_api(request):
-    """API endpoint to analyze symptoms using Groq"""
+    """API endpoint to analyze symptoms using Groq with full user context"""
     try:
         data = json.loads(request.body)
         symptoms_text = data.get('symptoms', '')
@@ -437,10 +437,10 @@ def analyze_symptoms_api(request):
         if not symptoms_text:
             return JsonResponse({'error': 'No symptoms provided'}, status=400)
         
-        # Get prediction from Groq
-        result = symptom_analyzer.predict_disease(symptoms_text)
+        # Get prediction from Groq with user context
+        result = symptom_analyzer.predict_disease(symptoms_text, request.user)
         
-        # Save to database
+        # Save to database with new fields
         symptom_prediction = SymptomPrediction.objects.create(
             user=request.user,
             symptoms=symptoms_text,
@@ -450,6 +450,9 @@ def analyze_symptoms_api(request):
             reasoning=result.get('reasoning', ''),
             suggested_drugs=result.get('suggested_drugs', []),
             common_symptoms_matched=result.get('common_symptoms_matched', []),
+            drug_interactions=result.get('drug_interactions', []),
+            safety_precautions=result.get('safety_precautions', []),
+            when_to_see_doctor=result.get('when_to_see_doctor', ''),
             full_response=result
         )
         
@@ -463,10 +466,6 @@ def analyze_symptoms_api(request):
             result.get('severity', ''), 
             "Consult a healthcare provider."
         )
-        
-        # Add drug interaction warning
-        if result.get('confidence_score', 0) > 60:
-            result['interaction_warning'] = "Always inform your doctor about any medications you're currently taking."
         
         return JsonResponse(result)
         

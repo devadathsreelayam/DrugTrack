@@ -1,94 +1,38 @@
 {% extends 'base.html' %}
+{% load crispy_forms_tags %}
 
-{% block title %}Symptom Checker - DrugTrack{% endblock %}
+{% block title %}AI Symptom Checker - DrugTrack{% endblock %}
 
 {% block extra_css %}
 <style>
-    .symptom-section {
-        background: white;
-        border-radius: 20px;
-        padding: 40px;
-        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
-    }
-    
-    .symptom-section h2 {
-        color: #0f172a;
-        font-weight: 700;
-        font-size: 28px;
-        margin-bottom: 8px;
-    }
-    
-    .symptom-section .subtitle {
-        color: #64748b;
-        font-size: 16px;
-        margin-bottom: 30px;
-    }
-    
     .symptom-input {
-        min-height: 120px;
+        min-height: 150px;
+        resize: vertical;
         border-radius: 12px;
         border: 2px solid #e2e8f0;
         padding: 16px;
         font-size: 15px;
         transition: all 0.3s;
-        resize: vertical;
     }
     .symptom-input:focus {
         border-color: #2c7da0;
         box-shadow: 0 0 0 4px rgba(44,125,160,0.1);
-    }
-    .symptom-input::placeholder {
-        color: #94a3b8;
+        outline: none;
     }
     
-    .btn-analyze {
-        background: #2c7da0;
-        color: white;
-        padding: 12px 40px;
-        border-radius: 10px;
-        font-weight: 600;
-        border: none;
-        transition: all 0.3s;
-        font-size: 16px;
-    }
-    .btn-analyze:hover {
-        background: #1a5a7a;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(44,125,160,0.3);
-        color: white;
-    }
-    .btn-analyze:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-    }
-    
-    .feature-tags {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 20px;
-    }
-    .feature-tag {
-        background: #f1f5f9;
-        color: #475569;
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 13px;
+    .context-badge {
+        display: inline-block;
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 12px;
         font-weight: 500;
-    }
-    .feature-tag i {
-        margin-right: 6px;
-        color: #2c7da0;
+        margin: 2px;
     }
     
-    /* Result Card */
     .result-card {
-        background: white;
-        border-radius: 20px;
-        padding: 35px;
-        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
-        animation: slideUp 0.4s ease;
+        animation: slideUp 0.5s ease-out;
     }
     
     @keyframes slideUp {
@@ -96,218 +40,108 @@
         to { opacity: 1; transform: translateY(0); }
     }
     
-    .result-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 20px;
-        padding-bottom: 20px;
-        border-bottom: 2px solid #f1f5f9;
-    }
+    .severity-Mild { border-left: 4px solid #22c55e; background: #f0fdf4; }
+    .severity-Moderate { border-left: 4px solid #eab308; background: #fefce8; }
+    .severity-Severe { border-left: 4px solid #ef4444; background: #fef2f2; }
     
-    .disease-name {
-        color: #0f172a;
-        font-size: 26px;
+    .drug-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px 18px;
+        margin-bottom: 10px;
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s;
+    }
+    .drug-card:hover {
+        border-color: #2c7da0;
+        box-shadow: 0 2px 8px rgba(44,125,160,0.1);
+    }
+    .drug-card .drug-name {
         font-weight: 700;
-        margin: 0;
-    }
-    
-    .severity-badge {
-        padding: 4px 16px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-    }
-    .severity-Mild { background: #dcfce7; color: #166534; }
-    .severity-Moderate { background: #fef3c7; color: #92400e; }
-    .severity-Severe { background: #fee2e2; color: #991b1b; }
-    
-    .confidence-section {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-    .confidence-bar {
-        width: 120px;
-        height: 6px;
-        background: #e2e8f0;
-        border-radius: 3px;
-        overflow: hidden;
-    }
-    .confidence-fill {
-        height: 100%;
-        border-radius: 3px;
-        transition: width 0.6s ease;
-    }
-    .confidence-text {
-        font-size: 14px;
-        font-weight: 600;
         color: #0f172a;
-        min-width: 45px;
+        font-size: 1.05rem;
     }
-    
-    .reasoning-box {
-        background: #f8fafc;
-        padding: 16px 20px;
+    .drug-card .drug-detail {
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+    .drug-card .drug-detail i {
+        width: 18px;
+        color: #2c7da0;
+    }
+    .drug-card .drug-badge {
+        font-size: 11px;
+        padding: 2px 12px;
         border-radius: 12px;
-        margin: 16px 0;
+        font-weight: 600;
     }
-    .reasoning-box p {
-        margin: 0;
-        color: #475569;
-        font-size: 15px;
-        line-height: 1.6;
-    }
+    .drug-card .drug-badge.primary { background: #dcfce7; color: #166534; }
+    .drug-card .drug-badge.alternative { background: #fef3c7; color: #92400e; }
     
-    .symptom-match {
+    .interaction-item {
+        background: #fef2f2;
+        border-radius: 8px;
+        padding: 10px 14px;
+        margin-bottom: 6px;
+        border-left: 3px solid #ef4444;
+    }
+    .interaction-item .severity-high { color: #dc2626; font-weight: 600; }
+    .interaction-item .severity-moderate { color: #eab308; font-weight: 600; }
+    .interaction-item .severity-low { color: #22c55e; font-weight: 600; }
+    
+    .precaution-item {
         display: inline-block;
-        background: #e0f2fe;
-        color: #0369a1;
+        background: #f1f5f9;
+        color: #475569;
         padding: 4px 14px;
         border-radius: 15px;
         font-size: 13px;
         margin: 3px 5px 3px 0;
     }
     
-    .drug-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 12px 0;
-    }
-    .drug-chip {
-        background: white;
-        border: 2px solid #e2e8f0;
-        color: #0f172a;
-        padding: 8px 20px;
-        border-radius: 25px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .drug-chip:hover {
-        border-color: #2c7da0;
-        background: #f0f9ff;
-    }
-    .drug-chip.active {
-        background: #2c7da0;
-        border-color: #2c7da0;
-        color: white;
-    }
-    .drug-chip i {
-        margin-right: 6px;
-    }
-    
-    .pharmacy-section {
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 2px solid #f1f5f9;
-    }
-    
-    .pharmacy-section h5 {
-        color: #0f172a;
-        font-weight: 600;
-        font-size: 16px;
-        margin-bottom: 12px;
-    }
-    .pharmacy-section h5 i {
-        color: #2c7da0;
-        margin-right: 8px;
-    }
-    
-    .pharmacy-btn {
-        display: inline-block;
-        background: #f1f5f9;
-        color: #0f172a;
-        padding: 10px 24px;
-        border-radius: 10px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.3s;
-        border: 2px solid transparent;
-    }
-    .pharmacy-btn:hover {
-        background: #e2e8f0;
-        color: #0f172a;
-    }
-    .pharmacy-btn i {
-        color: #2c7da0;
-        margin-right: 8px;
-    }
-    .pharmacy-btn.primary {
-        background: #2c7da0;
-        color: white;
-    }
-    .pharmacy-btn.primary:hover {
-        background: #1a5a7a;
-        color: white;
-    }
-    .pharmacy-btn.primary i {
-        color: white;
-    }
-    
-    .disclaimer-box {
-        background: #fef3c7;
-        border-radius: 12px;
-        padding: 12px 16px;
-        margin-top: 20px;
-        font-size: 13px;
-        color: #92400e;
-    }
-    .disclaimer-box i {
-        margin-right: 8px;
-    }
-    
-    .empty-state {
-        background: white;
-        border-radius: 20px;
-        padding: 60px 40px;
+    .loading-container {
         text-align: center;
-        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
-    }
-    .empty-state i {
-        font-size: 48px;
-        color: #cbd5e1;
-        margin-bottom: 16px;
-    }
-    .empty-state h4 {
-        color: #0f172a;
-        font-weight: 600;
-        margin-bottom: 8px;
-    }
-    .empty-state p {
-        color: #64748b;
-        margin: 0;
-    }
-    
-    .loading-card {
-        background: white;
-        border-radius: 20px;
-        padding: 40px;
-        text-align: center;
-        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
+        padding: 60px 20px;
     }
     .loading-spinner {
-        width: 40px;
-        height: 40px;
+        width: 50px;
+        height: 50px;
         border: 4px solid #e2e8f0;
         border-top-color: #2c7da0;
         border-radius: 50%;
-        animation: spin 0.6s linear infinite;
-        margin: 0 auto 16px;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 20px;
     }
     @keyframes spin {
         to { transform: rotate(360deg); }
     }
-    .loading-card p {
-        color: #64748b;
-        margin: 0;
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+    }
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
     }
     
-    .text-muted-small {
-        color: #94a3b8;
-        font-size: 14px;
+    .context-summary {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-top: 12px;
+        border: 1px solid #e2e8f0;
+    }
+    .context-summary .context-item {
+        display: inline-block;
+        font-size: 13px;
+        color: #475569;
+        margin-right: 15px;
+    }
+    .context-summary .context-item i {
+        color: #2c7da0;
+        margin-right: 4px;
     }
 </style>
 {% endblock %}
@@ -322,47 +156,89 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
     <!-- Input Column -->
     <div class="col-lg-5">
-        <div class="symptom-section">
-            <h2><i class="fas fa-stethoscope" style="color: #2c7da0;"></i> Symptom Checker</h2>
-            <p class="subtitle">Describe your symptoms and get AI-powered predictions.</p>
-            
-            <form id="symptomForm">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label fw-bold" style="color: #0f172a;">What are you experiencing?</label>
-                    <textarea 
-                        name="symptoms" 
-                        class="form-control symptom-input" 
-                        placeholder="Example: Fever, headache, and body aches for 2 days..."
-                        required
-                    ></textarea>
-                    <small class="text-muted-small mt-1 d-block">
-                        <i class="fas fa-info-circle"></i> Include duration and severity for better results
-                    </small>
-                </div>
-                <button type="submit" class="btn btn-analyze w-100" id="analyzeBtn">
-                    <i class="fas fa-microphone-alt"></i> Analyze Symptoms
-                </button>
-            </form>
-            
-            <div class="feature-tags">
-                <span class="feature-tag"><i class="fas fa-brain"></i> AI-Powered</span>
-                <span class="feature-tag"><i class="fas fa-chart-line"></i> Confidence Scores</span>
-                <span class="feature-tag"><i class="fas fa-pills"></i> Drug Suggestions</span>
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-stethoscope"></i> AI Symptom Checker
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">
+                    Describe your symptoms and our AI will analyze them with your medical context.
+                </p>
+                
+                <form id="symptomForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">What are you experiencing?</label>
+                        <textarea 
+                            name="symptoms" 
+                            class="form-control symptom-input" 
+                            placeholder="Example: Severe headache, fever of 101°F, body aches for 2 days..."
+                            required
+                        ></textarea>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> 
+                            Include duration, severity, and any relevant details.
+                        </small>
+                    </div>
+                    
+                    <!-- Context Summary -->
+                    <div class="context-summary">
+                        <small class="text-muted fw-bold d-block mb-1">
+                            <i class="fas fa-user-md"></i> Your Medical Context
+                        </small>
+                        <div>
+                            <span class="context-item">
+                                <i class="fas fa-pills"></i> {{ user.medications.count }} medications
+                            </span>
+                            <span class="context-item">
+                                <i class="fas fa-file-prescription"></i> {{ user.prescriptions.count }} prescriptions
+                            </span>
+                            <span class="context-item">
+                                <i class="fas fa-stethoscope"></i> {{ user.symptom_predictions.count }} analyses
+                            </span>
+                            {% if user.health_profile and user.health_profile.bp %}
+                            <span class="context-item">
+                                <i class="fas fa-heartbeat"></i> BP: {{ user.health_profile.bp }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-3" id="analyzeBtn">
+                        <i class="fas fa-microphone-alt"></i> Analyze Symptoms
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt"></i> 
+                    Your health data is used to provide personalized and safe recommendations.
+                </small>
             </div>
         </div>
     </div>
     
     <!-- Results Column -->
     <div class="col-lg-7">
-        <!-- Loading State -->
+        <!-- Loading -->
         <div id="loadingContainer" style="display: none;">
-            <div class="loading-card">
-                <div class="loading-spinner"></div>
-                <p>Analyzing your symptoms... Please wait</p>
+            <div class="card">
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <h5 class="fw-bold">Analyzing Your Symptoms</h5>
+                    <p class="text-muted">Considering your medical history, medications, and health profile...</p>
+                    <div class="mt-3">
+                        <span class="context-badge"><i class="fas fa-pills"></i> Checking medications</span>
+                        <span class="context-badge"><i class="fas fa-file-prescription"></i> Reviewing prescriptions</span>
+                        <span class="context-badge"><i class="fas fa-heartbeat"></i> Analyzing health profile</span>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -373,18 +249,18 @@
         
         <!-- Empty State -->
         <div id="infoContainer">
-            <div class="empty-state">
-                <i class="fas fa-notes-medical"></i>
-                <h4>Ready to help</h4>
-                <p>Enter your symptoms on the left and click Analyze.</p>
+            <div class="card">
+                <div class="empty-state">
+                    <i class="fas fa-notes-medical"></i>
+                    <h5>Ready to Help</h5>
+                    <p class="text-muted">Enter your symptoms on the left and click Analyze.</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-let currentDrugs = [];
-
 document.getElementById('symptomForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -415,10 +291,6 @@ document.getElementById('symptomForm').addEventListener('submit', async function
         if (response.ok && !data.error) {
             document.getElementById('resultContent').innerHTML = renderResults(data);
             results.style.display = 'block';
-            
-            if (data.suggested_drugs && data.suggested_drugs.length > 0) {
-                currentDrugs = data.suggested_drugs;
-            }
         } else {
             showError(data.error || 'Unable to analyze symptoms');
         }
@@ -432,113 +304,161 @@ document.getElementById('symptomForm').addEventListener('submit', async function
 });
 
 function renderResults(data) {
-    const severityColor = data.severity === 'Mild' ? '#22c55e' : 
-                         data.severity === 'Moderate' ? '#eab308' : '#ef4444';
+    // Severity color
+    const severityColors = {
+        'Mild': 'success',
+        'Moderate': 'warning',
+        'Severe': 'danger'
+    };
+    const severityColor = severityColors[data.severity] || 'secondary';
     
     let html = `
-        <div class="result-card">
-            <!-- Header -->
-            <div class="result-header">
-                <div>
-                    <h3 class="disease-name">${escapeHtml(data.predicted_disease)}</h3>
-                    <span class="severity-badge severity-${data.severity}">${data.severity}</span>
-                </div>
-                <div class="confidence-section">
-                    <div class="confidence-bar">
-                        <div class="confidence-fill" style="width: ${data.confidence_score}%; background: ${severityColor};"></div>
+        <div class="card result-card">
+            <div class="card-body">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h3 class="text-primary mb-1">${escapeHtml(data.predicted_disease)}</h3>
+                        <span class="badge bg-${severityColor}">${escapeHtml(data.severity)}</span>
+                        <span class="badge bg-secondary ms-2">Confidence: ${data.confidence_score}%</span>
                     </div>
-                    <span class="confidence-text">${data.confidence_score}%</span>
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i> ${new Date(data.timestamp).toLocaleTimeString()}
+                    </small>
                 </div>
+                
+                <!-- Reasoning -->
+                <div class="alert alert-light border-start border-4 border-primary">
+                    <strong><i class="fas fa-brain"></i> Reasoning:</strong>
+                    <p class="mb-0 mt-1">${escapeHtml(data.reasoning)}</p>
+                </div>
+                
+                <!-- Matched Symptoms -->
+                <div class="mb-3">
+                    <small class="text-muted fw-bold">Symptoms matched:</small>
+                    <div>
+                        ${data.common_symptoms_matched.map(s => 
+                            `<span class="badge bg-secondary me-1">${escapeHtml(s)}</span>`
+                        ).join('')}
+                    </div>
+                </div>
+    `;
+    
+    // Suggested Drugs
+    if (data.suggested_drugs && data.suggested_drugs.length > 0) {
+        html += `
+            <div class="mt-3">
+                <h6 class="fw-bold"><i class="fas fa-pills"></i> Suggested Medications</h6>
+                ${data.suggested_drugs.map(drug => `
+                    <div class="drug-card">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="drug-name">${escapeHtml(drug.name)}</span>
+                                <span class="drug-badge ${drug.is_alternative ? 'alternative' : 'primary'} ms-2">
+                                    ${drug.is_alternative ? 'Alternative' : 'Primary'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="drug-detail mt-1">
+                            ${drug.dosage ? `<span><i class="fas fa-weight-scale"></i> ${escapeHtml(drug.dosage)}</span>` : ''}
+                            ${drug.frequency ? `<span class="ms-3"><i class="fas fa-clock"></i> ${escapeHtml(drug.frequency)}</span>` : ''}
+                            ${drug.duration ? `<span class="ms-3"><i class="fas fa-calendar"></i> ${escapeHtml(drug.duration)}</span>` : ''}
+                        </div>
+                        ${drug.reason ? `<small class="text-muted d-block mt-1">${escapeHtml(drug.reason)}</small>` : ''}
+                    </div>
+                `).join('')}
             </div>
-            
-            <!-- Reasoning -->
-            <div class="reasoning-box">
-                <p><strong>Why:</strong> ${escapeHtml(data.reasoning)}</p>
+        `;
+    }
+    
+    // Drug Interactions
+    if (data.drug_interactions && data.drug_interactions.length > 0) {
+        html += `
+            <div class="mt-3">
+                <h6 class="fw-bold text-danger"><i class="fas fa-exclamation-triangle"></i> Drug Interaction Warnings</h6>
+                ${data.drug_interactions.map(interaction => `
+                    <div class="interaction-item">
+                        <strong>${escapeHtml(interaction.drug1)}</strong> ↔ <strong>${escapeHtml(interaction.drug2)}</strong>
+                        <span class="severity-${interaction.severity.toLowerCase()}">
+                            (${escapeHtml(interaction.severity)})
+                        </span>
+                        <br>
+                        <small class="text-muted">${escapeHtml(interaction.description)}</small>
+                    </div>
+                `).join('')}
             </div>
-            
-            <!-- Symptoms -->
-            <div style="margin: 16px 0;">
-                <span style="color: #64748b; font-size: 14px; font-weight: 500;">Symptoms matched:</span>
-                <div style="margin-top: 4px;">
-                    ${data.common_symptoms_matched.map(s => 
-                        `<span class="symptom-match">${escapeHtml(s)}</span>`
+        `;
+    }
+    
+    // Safety Precautions
+    if (data.safety_precautions && data.safety_precautions.length > 0) {
+        html += `
+            <div class="mt-3">
+                <h6 class="fw-bold"><i class="fas fa-shield-alt"></i> Safety Precautions</h6>
+                <div>
+                    ${data.safety_precautions.map(p => 
+                        `<span class="precaution-item">${escapeHtml(p)}</span>`
                     ).join('')}
                 </div>
             </div>
-    `;
-
-    // Drugs
-    if (data.suggested_drugs && data.suggested_drugs.length > 0) {
+        `;
+    }
+    
+    // When to see doctor
+    if (data.when_to_see_doctor) {
         html += `
-            <div style="margin: 16px 0;">
-                <span style="color: #64748b; font-size: 14px; font-weight: 500;">Suggested medications:</span>
-                <div class="drug-chips">
-                    ${data.suggested_drugs.map((drug, i) => `
-                        <span class="drug-chip ${i === 0 ? 'active' : ''}" 
-                              onclick="selectDrug('${escapeHtml(drug)}', this)">
-                            <i class="fas fa-capsules"></i> ${escapeHtml(drug)}
-                        </span>
-                    `).join('')}
-                </div>
+            <div class="alert alert-warning mt-3">
+                <strong><i class="fas fa-ambulance"></i> When to see a doctor:</strong>
+                <p class="mb-0 mt-1">${escapeHtml(data.when_to_see_doctor)}</p>
             </div>
         `;
     }
-
-    // Pharmacy
-    if (data.suggested_drugs && data.suggested_drugs.length > 0) {
-        const firstDrug = escapeHtml(data.suggested_drugs[0]);
+    
+    // General Advice
+    if (data.general_advice) {
         html += `
-            <div class="pharmacy-section">
-                <h5><i class="fas fa-store"></i> Find ${firstDrug} near you</h5>
-                <a href="/pharmacy/search/?drug_name=${encodeURIComponent(data.suggested_drugs[0])}" 
-                   class="pharmacy-btn primary" target="_blank">
-                    <i class="fas fa-search"></i> View Pharmacies with ${firstDrug}
-                </a>
-                <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">
-                    <i class="fas fa-info-circle"></i> Click to find nearby pharmacies with this medicine
-                </p>
+            <div class="alert alert-info mt-3">
+                <strong><i class="fas fa-comment-medical"></i> Advice:</strong>
+                <p class="mb-0 mt-1">${escapeHtml(data.general_advice)}</p>
             </div>
         `;
     }
-
+    
     // Disclaimer
     html += `
-        <div class="disclaimer-box">
-            <i class="fas fa-exclamation-triangle"></i>
-            ${escapeHtml(data.disclaimer || 'This is not a medical diagnosis. Please consult a doctor.')}
+        <div class="alert alert-danger mt-3">
+            <strong><i class="fas fa-exclamation-circle"></i> Medical Disclaimer</strong>
+            <p class="mb-0 mt-1">${escapeHtml(data.disclaimer)}</p>
+        </div>
+        
+        <!-- Actions -->
+        <div class="mt-3 d-flex gap-2 flex-wrap">
+            <a href="{% url 'pharmacy_search' %}?drug_name=${encodeURIComponent(data.suggested_drugs && data.suggested_drugs[0] ? data.suggested_drugs[0].name : '')}" 
+               class="btn btn-primary">
+                <i class="fas fa-store"></i> Find Pharmacies
+            </a>
+            <button class="btn btn-outline-secondary" onclick="window.location.reload()">
+                <i class="fas fa-redo"></i> New Analysis
+            </button>
         </div>
     </div>
+</div>
     `;
-
-    return html;
-}
-
-function selectDrug(drugName, element) {
-    document.querySelectorAll('.drug-chip').forEach(el => el.classList.remove('active'));
-    if (element) element.classList.add('active');
     
-    // Update pharmacy section
-    const section = document.querySelector('.pharmacy-section');
-    if (section) {
-        section.innerHTML = `
-            <h5><i class="fas fa-store"></i> Find ${escapeHtml(drugName)} near you</h5>
-            <a href="/pharmacy/search/?drug_name=${encodeURIComponent(drugName)}" 
-               class="pharmacy-btn primary" target="_blank">
-                <i class="fas fa-search"></i> View Pharmacies with ${escapeHtml(drugName)}
-            </a>
-            <p style="color: #94a3b8; font-size: 13px; margin-top: 8px;">
-                <i class="fas fa-info-circle"></i> Click to find nearby pharmacies with this medicine
-            </p>
-        `;
-    }
+    return html;
 }
 
 function showError(message) {
     document.getElementById('resultContent').innerHTML = `
-        <div class="result-card">
-            <div class="alert alert-danger mb-0" style="border-radius: 12px;">
-                <i class="fas fa-exclamation-circle"></i> ${escapeHtml(message)}
-                <br><small>Please try again or check your connection.</small>
+        <div class="card">
+            <div class="card-body">
+                <div class="alert alert-danger mb-0">
+                    <i class="fas fa-exclamation-circle"></i> ${escapeHtml(message)}
+                    <br><small>Please try again or check your connection.</small>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="location.reload()">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
             </div>
         </div>
     `;

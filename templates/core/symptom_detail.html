@@ -4,194 +4,49 @@
 
 {% block extra_css %}
 <style>
-    .detail-section {
-        background: white;
-        border-radius: 20px;
-        padding: 35px;
-        box-shadow: 0 5px 30px rgba(0,0,0,0.08);
-        margin-bottom: 25px;
-    }
-    
-    .detail-section h5 {
-        color: #0f172a;
-        font-weight: 600;
-        font-size: 16px;
+    .detail-card {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 16px 20px;
         margin-bottom: 12px;
-    }
-    .detail-section h5 i {
-        color: #2c7da0;
-        margin-right: 8px;
-    }
-    
-    .symptoms-box {
-        background: #f8fafc;
-        border-radius: 12px;
-        padding: 16px 20px;
         border-left: 4px solid #2c7da0;
-        color: #475569;
-        line-height: 1.6;
     }
-    
-    .disease-name {
-        font-size: 28px;
-        font-weight: 700;
-        color: #0f172a;
-        margin: 0 0 8px 0;
-    }
-    
-    .confidence-bar {
-        height: 8px;
-        background: #e2e8f0;
-        border-radius: 4px;
-        overflow: hidden;
-        margin: 8px 0;
-    }
-    .confidence-fill {
-        height: 100%;
-        border-radius: 4px;
-        transition: width 0.6s ease;
-    }
-    
-    .severity-badge {
-        padding: 4px 16px;
-        border-radius: 20px;
-        font-size: 13px;
+    .detail-card .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
         font-weight: 600;
     }
-    .severity-Mild { background: #dcfce7; color: #166534; }
-    .severity-Moderate { background: #fef3c7; color: #92400e; }
-    .severity-Severe { background: #fee2e2; color: #991b1b; }
-    
-    .reasoning-box {
-        background: #f8fafc;
-        padding: 16px 20px;
-        border-radius: 12px;
-        color: #475569;
-        line-height: 1.6;
-    }
-    
-    .symptom-tag {
-        display: inline-block;
-        background: #e0f2fe;
-        color: #0369a1;
-        padding: 4px 14px;
-        border-radius: 15px;
-        font-size: 13px;
-        margin: 3px 5px 3px 0;
-    }
-    
-    .drug-chip {
-        display: inline-block;
-        background: white;
-        border: 2px solid #e2e8f0;
+    .detail-card .value {
+        font-size: 1rem;
         color: #0f172a;
-        padding: 8px 20px;
-        border-radius: 25px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        margin: 4px 6px 4px 0;
+        margin: 4px 0 0;
     }
-    .drug-chip:hover {
-        border-color: #2c7da0;
-        background: #f0f9ff;
-    }
-    .drug-chip.active {
-        background: #2c7da0;
-        border-color: #2c7da0;
-        color: white;
-    }
-    .drug-chip i {
-        margin-right: 6px;
-    }
-    
-    .pharmacy-section {
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 2px solid #f1f5f9;
-    }
-    
-    .pharmacy-btn {
-        display: inline-block;
-        background: #2c7da0;
-        color: white;
-        padding: 10px 28px;
-        border-radius: 10px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.3s;
-        border: none;
-    }
-    .pharmacy-btn:hover {
-        background: #1a5a7a;
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(44,125,160,0.3);
-    }
-    .pharmacy-btn i {
-        margin-right: 8px;
-    }
-    
-    .pharmacy-btn-outline {
-        background: transparent;
-        color: #2c7da0;
-        border: 2px solid #2c7da0;
-        padding: 8px 24px;
-        border-radius: 10px;
-        font-weight: 500;
-        text-decoration: none;
-        transition: all 0.3s;
-        display: inline-block;
-    }
-    .pharmacy-btn-outline:hover {
-        background: #2c7da0;
-        color: white;
-    }
-    
-    .disclaimer-box {
-        background: #fef3c7;
-        border-radius: 12px;
+    .drug-item {
+        background: white;
+        border-radius: 8px;
         padding: 12px 16px;
-        font-size: 13px;
-        color: #92400e;
-        margin-top: 20px;
+        margin-bottom: 8px;
+        border: 1px solid #e2e8f0;
     }
-    .disclaimer-box i {
-        margin-right: 8px;
+    .drug-item .name {
+        font-weight: 600;
+        color: #0f172a;
     }
-    
-    .info-text {
-        color: #94a3b8;
-        font-size: 13px;
-        margin-top: 8px;
+    .drug-item .badge-alt {
+        font-size: 11px;
+        padding: 2px 12px;
+        border-radius: 12px;
     }
-    .info-text i {
-        margin-right: 4px;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 20px;
-    }
-    .action-buttons .btn {
-        padding: 10px 24px;
-        border-radius: 10px;
-        font-weight: 500;
-    }
-    
-    .back-link {
-        color: #64748b;
-        text-decoration: none;
-        transition: color 0.2s;
-    }
-    .back-link:hover {
-        color: #2c7da0;
-    }
-    .back-link i {
-        margin-right: 6px;
+    .drug-item .badge-alt.primary { background: #dcfce7; color: #166534; }
+    .drug-item .badge-alt.alternative { background: #fef3c7; color: #92400e; }
+    .interaction-warning {
+        background: #fef2f2;
+        border-left: 3px solid #ef4444;
+        padding: 10px 14px;
+        border-radius: 8px;
+        margin-bottom: 6px;
     }
 </style>
 {% endblock %}
@@ -209,148 +64,148 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="text-white mb-0">
-                <i class="fas fa-file-alt"></i> Analysis Detail
-            </h1>
-            <small class="text-white-50">
-                <i class="fas fa-calendar"></i> {{ prediction.created_at|date:"M d, Y H:i" }}
-            </small>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-lg-8 mx-auto">
-        <!-- Symptoms -->
-        <div class="detail-section">
-            <h5><i class="fas fa-notes-medical"></i> Original Symptoms</h5>
-            <div class="symptoms-box">
-                {{ prediction.symptoms }}
-            </div>
-        </div>
-
-        <!-- Prediction -->
-        <div class="detail-section">
-            <div class="d-flex justify-content-between align-items-start flex-wrap">
+    <div class="col-md-10 mx-auto">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <div>
-                    <h4 class="disease-name">{{ prediction.predicted_disease }}</h4>
-                    <span class="severity-badge severity-{{ prediction.severity }}">
-                        {{ prediction.severity }}
-                    </span>
+                    <i class="fas fa-file-alt"></i> Analysis Detail
                 </div>
-                <div style="min-width: 140px; margin-top: 8px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: #64748b;">
-                        <span>Confidence</span>
-                        <span>{{ prediction.confidence_score }}%</span>
-                    </div>
-                    <div class="confidence-bar">
-                        <div class="confidence-fill {% if prediction.confidence_score >= 70 %}bg-success{% elif prediction.confidence_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
-                             style="width: {{ prediction.confidence_score }}%;"></div>
-                    </div>
-                </div>
+                <small class="text-white-50">
+                    <i class="fas fa-calendar"></i> {{ prediction.created_at|date:"M d, Y H:i" }}
+                </small>
             </div>
-        </div>
-
-        <!-- Reasoning -->
-        <div class="detail-section">
-            <h5><i class="fas fa-brain"></i> Reasoning</h5>
-            <div class="reasoning-box">
-                {{ prediction.reasoning }}
-            </div>
-        </div>
-
-        <!-- Matched Symptoms -->
-        <div class="detail-section">
-            <h5><i class="fas fa-list"></i> Matched Symptoms</h5>
-            <div>
-                {% for symptom in prediction.common_symptoms_matched %}
-                    <span class="symptom-tag">{{ symptom }}</span>
-                {% empty %}
-                    <span class="text-muted">No symptoms matched</span>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Suggested Drugs -->
-        <div class="detail-section">
-            <h5><i class="fas fa-pills"></i> Suggested Medications</h5>
-            
-            {% if prediction.suggested_drugs %}
-                <div class="drug-chips">
-                    {% for drug in prediction.suggested_drugs %}
-                        <span class="drug-chip {% if forloop.first %}active{% endif %}" 
-                              onclick="selectDrug('{{ drug|escapejs }}', this)">
-                            <i class="fas fa-capsules"></i> {{ drug }}
+            <div class="card-body">
+                <!-- Disease -->
+                <div class="detail-card">
+                    <div class="label"><i class="fas fa-virus"></i> Predicted Disease</div>
+                    <h4 class="value" style="font-size: 1.4rem;">{{ prediction.predicted_disease }}</h4>
+                    <div class="mt-2">
+                        <span class="badge {% if prediction.severity == 'Mild' %}bg-success{% elif prediction.severity == 'Moderate' %}bg-warning{% else %}bg-danger{% endif %}">
+                            Severity: {{ prediction.severity }}
                         </span>
-                    {% endfor %}
+                        <span class="badge bg-secondary ms-2">Confidence: {{ prediction.confidence_score }}%</span>
+                    </div>
                 </div>
                 
-                <!-- Pharmacy Section -->
-                <div class="pharmacy-section" id="pharmacySection">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap">
-                        <div>
-                            <h5 style="margin-bottom: 4px;">
-                                <i class="fas fa-store"></i> 
-                                Find <span id="selectedDrug">{{ prediction.suggested_drugs.0 }}</span> near you
-                            </h5>
-                            <p class="info-text">
-                                <i class="fas fa-info-circle"></i> 
-                                Click the button to see pharmacies with this medicine
-                            </p>
-                        </div>
-                        <a href="/pharmacy/search/?drug_name={{ prediction.suggested_drugs.0|urlencode }}" 
-                           class="pharmacy-btn" target="_blank">
-                            <i class="fas fa-search"></i> View Pharmacies
-                        </a>
+                <!-- Reasoning -->
+                <div class="detail-card">
+                    <div class="label"><i class="fas fa-brain"></i> Reasoning</div>
+                    <div class="value">{{ prediction.reasoning }}</div>
+                </div>
+                
+                <!-- Symptoms -->
+                <div class="detail-card">
+                    <div class="label"><i class="fas fa-notes-medical"></i> Original Symptoms</div>
+                    <div class="value">{{ prediction.symptoms }}</div>
+                </div>
+                
+                <!-- Matched Symptoms -->
+                <div class="detail-card">
+                    <div class="label"><i class="fas fa-list"></i> Matched Symptoms</div>
+                    <div class="value">
+                        {% for symptom in prediction.common_symptoms_matched %}
+                            <span class="badge bg-secondary me-1">{{ symptom }}</span>
+                        {% empty %}
+                            <span class="text-muted">No symptoms matched</span>
+                        {% endfor %}
                     </div>
                 </div>
-            {% else %}
-                <p class="text-muted">No medications suggested for this condition.</p>
-            {% endif %}
-        </div>
-
-        <!-- Disclaimer -->
-        <div class="detail-section" style="background: transparent; padding: 0; box-shadow: none;">
-            <div class="disclaimer-box">
-                <i class="fas fa-exclamation-triangle"></i>
-                {{ prediction.full_response.disclaimer|default:"This is not a medical diagnosis. Please consult a doctor." }}
+                
+                <!-- Suggested Drugs -->
+                <div class="detail-card">
+                    <div class="label"><i class="fas fa-pills"></i> Suggested Medications</div>
+                    <div class="value">
+                        {% if prediction.suggested_drugs %}
+                            {% for drug in prediction.suggested_drugs %}
+                            <div class="drug-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <span class="name">{{ drug.name }}</span>
+                                        <span class="badge-alt {% if drug.is_alternative %}alternative{% else %}primary{% endif %}">
+                                            {{ drug.is_alternative|yesno:"Alternative,Primary" }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-muted small">
+                                    {% if drug.dosage %}Dosage: {{ drug.dosage }}{% endif %}
+                                    {% if drug.frequency %} | Frequency: {{ drug.frequency }}{% endif %}
+                                    {% if drug.duration %} | Duration: {{ drug.duration }}{% endif %}
+                                </div>
+                                {% if drug.reason %}
+                                <small class="text-muted d-block mt-1">{{ drug.reason }}</small>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">No medications suggested</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Drug Interactions -->
+                {% if prediction.drug_interactions %}
+                <div class="detail-card" style="border-left-color: #ef4444;">
+                    <div class="label text-danger"><i class="fas fa-exclamation-triangle"></i> Drug Interactions</div>
+                    <div class="value">
+                        {% for interaction in prediction.drug_interactions %}
+                        <div class="interaction-warning">
+                            <strong>{{ interaction.drug1 }}</strong> ↔ <strong>{{ interaction.drug2 }}</strong>
+                            <span class="badge {% if interaction.severity == 'High' %}bg-danger{% elif interaction.severity == 'Moderate' %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ interaction.severity }}
+                            </span>
+                            <br>
+                            <small class="text-muted">{{ interaction.description }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Safety Precautions -->
+                {% if prediction.safety_precautions %}
+                <div class="detail-card">
+                    <div class="label"><i class="fas fa-shield-alt"></i> Safety Precautions</div>
+                    <div class="value">
+                        {% for precaution in prediction.safety_precautions %}
+                            <span class="badge bg-light text-dark me-1">{{ precaution }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- When to See Doctor -->
+                {% if prediction.when_to_see_doctor %}
+                <div class="detail-card" style="border-left-color: #eab308;">
+                    <div class="label"><i class="fas fa-ambulance"></i> When to See a Doctor</div>
+                    <div class="value">{{ prediction.when_to_see_doctor }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- Disclaimer -->
+                <div class="alert alert-danger mt-3">
+                    <strong><i class="fas fa-exclamation-circle"></i> Medical Disclaimer</strong>
+                    <p class="mb-0 mt-1">
+                        {{ prediction.full_response.disclaimer|default:"This is not a medical diagnosis. Please consult a doctor." }}
+                    </p>
+                </div>
+                
+                <!-- Actions -->
+                <div class="mt-4 d-flex gap-2 flex-wrap">
+                    <a href="{% url 'symptom_checker' %}" class="btn btn-primary">
+                        <i class="fas fa-microphone-alt"></i> New Analysis
+                    </a>
+                    <a href="{% url 'symptom_history' %}" class="btn btn-secondary">
+                        <i class="fas fa-history"></i> Back to History
+                    </a>
+                    {% if prediction.suggested_drugs %}
+                    <a href="{% url 'pharmacy_search' %}?drug_name={{ prediction.suggested_drugs.0.name }}" 
+                       class="btn btn-success">
+                        <i class="fas fa-store"></i> Find Pharmacies
+                    </a>
+                    {% endif %}
+                </div>
             </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="action-buttons">
-            <a href="{% url 'symptom_checker' %}" class="btn btn-primary">
-                <i class="fas fa-microphone-alt"></i> New Analysis
-            </a>
-            <a href="{% url 'symptom_history' %}" class="btn btn-secondary">
-                <i class="fas fa-history"></i> Back to History
-            </a>
-            <a href="{% url 'pharmacy_search' %}" class="btn btn-outline-light">
-                <i class="fas fa-store"></i> Browse Pharmacies
-            </a>
         </div>
     </div>
 </div>
-
-<script>
-function selectDrug(drugName, element) {
-    // Update active chip
-    document.querySelectorAll('.drug-chip').forEach(el => el.classList.remove('active'));
-    if (element) element.classList.add('active');
-    
-    // Update pharmacy section
-    const selectedDrugSpan = document.getElementById('selectedDrug');
-    const pharmacyBtn = document.querySelector('.pharmacy-btn');
-    
-    if (selectedDrugSpan) {
-        selectedDrugSpan.textContent = drugName;
-    }
-    
-    if (pharmacyBtn) {
-        pharmacyBtn.href = `/pharmacy/search/?drug_name=${encodeURIComponent(drugName)}`;
-    }
-}
-</script>
 {% endblock %}
