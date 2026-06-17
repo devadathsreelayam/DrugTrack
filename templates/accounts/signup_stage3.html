@@ -3,24 +3,130 @@
 
 {% block title %}Health Status - Step 3 of 4{% endblock %}
 
+{% block extra_css %}
+<style>
+    .health-form .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .health-form label {
+        font-weight: 500;
+        color: #0f172a;
+    }
+    .health-form .help-text {
+        font-size: 0.85rem;
+        color: #94a3b8;
+    }
+    .bmi-preview {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-top: 15px;
+        border-left: 4px solid #2c7da0;
+        display: none;
+    }
+    .bmi-preview .bmi-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .bmi-preview .bmi-category {
+        font-weight: 500;
+    }
+    .bmi-preview .bmi-category.underweight { color: #f59e0b; }
+    .bmi-preview .bmi-category.normal { color: #22c55e; }
+    .bmi-preview .bmi-category.overweight { color: #f59e0b; }
+    .bmi-preview .bmi-category.obese { color: #ef4444; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-7 col-lg-6">
+    <div class="col-md-8 col-lg-7">
         <div class="card shadow-sm border-0">
             <div class="card-body p-4 p-md-5">
                 <div class="text-center mb-4">
                     <span class="badge rounded-pill bg-light text-primary mb-3">Step 3 of 4</span>
-                    <h3 class="mb-2">Optional health details</h3>
-                    <p class="text-muted mb-0">Add these if you want more accurate recommendations</p>
+                    <h3 class="mb-2">Optional Health Details</h3>
+                    <p class="text-muted mb-0">
+                        Add your health metrics for better recommendations.
+                        <br>All fields are optional.
+                    </p>
                 </div>
                 <div class="progress mb-4" style="height: 8px;">
                     <div class="progress-bar bg-success" style="width: 75%"></div>
                 </div>
                 
-                <form method="POST">
+                <form method="POST" class="health-form">
                     {% csrf_token %}
-                    {{ form|crispy }}
-                    <div class="d-flex gap-2 mt-3">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.bp|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.cholesterol|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            {{ form.blood_sugar|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form.weight|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.height|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <!-- BMI Preview -->
+                    <div id="bmiPreview" class="bmi-preview">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-muted small">Your BMI</span>
+                                <div>
+                                    <span class="bmi-value" id="bmiValue">--</span>
+                                    <span class="bmi-category" id="bmiCategory">--</span>
+                                </div>
+                            </div>
+                            <div>
+                                <a href="https://www.nhlbi.nih.gov/health/educational/lose_wt/BMI/bmicalc.htm" 
+                                   target="_blank" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-info-circle"></i> About BMI
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            {{ form.allergies|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            {{ form.chronic_conditions|as_crispy_field }}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <small>
+                            This information helps provide personalized health insights. 
+                            You can always update it later from your profile.
+                        </small>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
                         <a href="{% url 'signup_stage2' %}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left"></i> Back
                         </a>
@@ -33,4 +139,52 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const weightInput = document.querySelector('#id_weight');
+    const heightInput = document.querySelector('#id_height');
+    const bmiPreview = document.getElementById('bmiPreview');
+    const bmiValue = document.getElementById('bmiValue');
+    const bmiCategory = document.getElementById('bmiCategory');
+    
+    function calculateBMI() {
+        const weight = parseFloat(weightInput?.value);
+        const height = parseFloat(heightInput?.value);
+        
+        if (weight && height && height > 0) {
+            const bmi = weight / (height * height);
+            bmiValue.textContent = bmi.toFixed(1);
+            
+            let category = '';
+            let className = '';
+            if (bmi < 18.5) {
+                category = 'Underweight';
+                className = 'underweight';
+            } else if (bmi < 25) {
+                category = 'Normal';
+                className = 'normal';
+            } else if (bmi < 30) {
+                category = 'Overweight';
+                className = 'overweight';
+            } else {
+                category = 'Obese';
+                className = 'obese';
+            }
+            
+            bmiCategory.textContent = category;
+            bmiCategory.className = 'bmi-category ' + className;
+            bmiPreview.style.display = 'block';
+        } else {
+            bmiPreview.style.display = 'none';
+        }
+    }
+    
+    if (weightInput) weightInput.addEventListener('input', calculateBMI);
+    if (heightInput) heightInput.addEventListener('input', calculateBMI);
+    
+    // Calculate on load if values exist
+    calculateBMI();
+});
+</script>
 {% endblock %}

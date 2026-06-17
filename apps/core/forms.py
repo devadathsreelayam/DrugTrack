@@ -64,23 +64,106 @@ class Stage2ProfileForm(forms.ModelForm):
 
 
 class Stage3HealthForm(forms.Form):
-    """Stage 3: Optional health snapshot for recommendations."""
+    """Stage 3: Health status"""
+    
+    BP_CHOICES = [
+        ('', 'Select blood pressure'),
+        ('HIGH', 'High'),
+        ('LOW', 'Low'),
+        ('NORMAL', 'Normal'),
+    ]
+    
+    CHOLESTEROL_CHOICES = [
+        ('', 'Select cholesterol level'),
+        ('HIGH', 'High'),
+        ('NORMAL', 'Normal'),
+    ]
+    
+    BLOOD_SUGAR_CHOICES = [
+        ('', 'Select blood sugar level'),
+        ('NORMAL', 'Normal (70-100 mg/dL)'),
+        ('PRE_DIABETIC', 'Pre-diabetic (100-125 mg/dL)'),
+        ('DIABETIC', 'Diabetic (126+ mg/dL)'),
+        ('UNKNOWN', 'Not sure / Not tested'),
+    ]
+    
     bp = forms.ChoiceField(
+        choices=BP_CHOICES,
         required=False,
-        choices=[('', 'Select blood pressure (optional)'), ('HIGH', 'High'), ('LOW', 'Low'), ('NORMAL', 'Normal')],
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+    
     cholesterol = forms.ChoiceField(
+        choices=CHOLESTEROL_CHOICES,
         required=False,
-        choices=[('', 'Select cholesterol level (optional)'), ('HIGH', 'High'), ('NORMAL', 'Normal')],
         widget=forms.Select(attrs={'class': 'form-select'})
     )
-    na_to_k = forms.FloatField(
+    
+    blood_sugar = forms.ChoiceField(
+        choices=BLOOD_SUGAR_CHOICES,
         required=False,
-        min_value=0.0,
-        max_value=40.0,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.1', 'placeholder': 'Optional - e.g., 15.5'})
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
+    
+    weight = forms.DecimalField(
+        max_digits=5,
+        decimal_places=1,
+        required=False,
+        min_value=20,
+        max_value=300,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g., 70.5',
+            'step': '0.1'
+        }),
+        label='Weight (kg)'
+    )
+    
+    height = forms.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        required=False,
+        min_value=0.50,
+        max_value=2.50,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g., 1.75',
+            'step': '0.01'
+        }),
+        label='Height (meters)'
+    )
+    
+    allergies = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 2,
+            'placeholder': 'e.g., Penicillin, Dust, Pollen'
+        }),
+        label='Known Allergies (optional)'
+    )
+    
+    chronic_conditions = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': 2,
+            'placeholder': 'e.g., Diabetes, Hypertension, Asthma'
+        }),
+        label='Chronic Conditions (optional)'
+    )
+    
+    def clean_weight(self):
+        weight = self.cleaned_data.get('weight')
+        if weight is not None and weight <= 0:
+            raise forms.ValidationError('Weight must be greater than 0.')
+        return weight
+    
+    def clean_height(self):
+        height = self.cleaned_data.get('height')
+        if height is not None and height <= 0:
+            raise forms.ValidationError('Height must be greater than 0.')
+        return height
 
 
 class Stage4MedicationsForm(forms.Form):

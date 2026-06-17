@@ -106,33 +106,53 @@ def signup_stage2(request):
 
 @login_required
 def signup_stage3(request):
-    """Stage 3: Optional health status"""
+    """Stage 3: Optional health status - Updated with realistic metrics"""
     health_profile = getattr(request.user, 'health_profile', None)
 
     if request.method == 'POST':
         form = Stage3HealthForm(request.POST)
         if form.is_valid():
-            bp = form.cleaned_data.get('bp') or ''
-            cholesterol = form.cleaned_data.get('cholesterol') or ''
-            na_to_k = form.cleaned_data.get('na_to_k')
-
-            if bp or cholesterol or na_to_k is not None:
-                health_profile = health_profile or UserHealthProfile(user=request.user)
-                health_profile.bp = bp
-                health_profile.cholesterol = cholesterol
-                health_profile.na_to_k = na_to_k
-                health_profile.save()
-                messages.success(request, 'Health details saved.')
-
+            health_profile = health_profile or UserHealthProfile(user=request.user)
+            
+            # Update only if values are provided
+            if form.cleaned_data.get('bp'):
+                health_profile.bp = form.cleaned_data['bp']
+            
+            if form.cleaned_data.get('cholesterol'):
+                health_profile.cholesterol = form.cleaned_data['cholesterol']
+            
+            if form.cleaned_data.get('blood_sugar'):
+                health_profile.blood_sugar = form.cleaned_data['blood_sugar']
+            
+            if form.cleaned_data.get('weight') is not None:
+                health_profile.weight = form.cleaned_data['weight']
+            
+            if form.cleaned_data.get('height') is not None:
+                health_profile.height = form.cleaned_data['height']
+            
+            if form.cleaned_data.get('allergies'):
+                health_profile.allergies = form.cleaned_data['allergies']
+            
+            if form.cleaned_data.get('chronic_conditions'):
+                health_profile.chronic_conditions = form.cleaned_data['chronic_conditions']
+            
+            health_profile.save()
+            messages.success(request, 'Health details saved successfully!')
             return redirect('signup_stage4')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        initial = {
-            'bp': health_profile.bp if health_profile and health_profile.bp else '',
-            'cholesterol': health_profile.cholesterol if health_profile and health_profile.cholesterol else '',
-            'na_to_k': health_profile.na_to_k if health_profile and health_profile.na_to_k is not None else '',
-        }
+        initial = {}
+        if health_profile:
+            initial = {
+                'bp': health_profile.bp or '',
+                'cholesterol': health_profile.cholesterol or '',
+                'blood_sugar': health_profile.blood_sugar or '',
+                'weight': health_profile.weight or '',
+                'height': health_profile.height or '',
+                'allergies': health_profile.allergies or '',
+                'chronic_conditions': health_profile.chronic_conditions or '',
+            }
         form = Stage3HealthForm(initial=initial)
 
     return render(request, 'accounts/signup_stage3.html', {'form': form, 'stage': 3})

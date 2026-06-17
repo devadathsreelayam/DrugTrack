@@ -72,13 +72,56 @@ class Medicine(models.Model):
 
 class UserHealthProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='health_profile')
+    
+    # Blood Pressure
     bp = models.CharField(max_length=10, blank=True, null=True)  # HIGH, LOW, NORMAL
+    
+    # Cholesterol
     cholesterol = models.CharField(max_length=10, blank=True, null=True)  # HIGH, NORMAL
-    na_to_k = models.FloatField(blank=True, null=True)
+    
+    # Blood Sugar / Diabetes
+    blood_sugar = models.CharField(max_length=20, blank=True, null=True, 
+                                   help_text="Fasting blood sugar level")
+    
+    # Weight and Height (for BMI)
+    weight = models.DecimalField(max_digits=5, decimal_places=1, blank=True, null=True,
+                                 help_text="Weight in kg")
+    height = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True,
+                                 help_text="Height in meters")
+    
+    # Additional health metrics
+    allergies = models.TextField(blank=True, null=True, 
+                                 help_text="Any known allergies")
+    chronic_conditions = models.TextField(blank=True, null=True,
+                                          help_text="Chronic conditions like diabetes, hypertension, etc.")
+    
     updated_at = models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return f"{self.user.username} - Health Profile"
+    
+    @property
+    def bmi(self):
+        """Calculate BMI if weight and height are available"""
+        if self.weight and self.height and self.height > 0:
+            bmi = self.weight / (self.height ** 2)
+            return round(bmi, 1)
+        return None
+    
+    @property
+    def bmi_category(self):
+        """Get BMI category"""
+        bmi = self.bmi
+        if bmi is None:
+            return "Unknown"
+        if bmi < 18.5:
+            return "Underweight"
+        elif bmi < 25:
+            return "Normal"
+        elif bmi < 30:
+            return "Overweight"
+        else:
+            return "Obese"
 
 
 class UserMedication(models.Model):
