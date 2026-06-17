@@ -1,5 +1,8 @@
 from math import radians, sin, cos, sqrt, asin
+<<<<<<< HEAD
 from ..models import Pharmacy
+=======
+>>>>>>> 69d80ea1d11244458099194d4be1c9ea55921521
 
 
 def haversine_distance(lat1, lon1, lat2, lon2):
@@ -36,6 +39,10 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 
 def find_nearby_pharmacies(lat, lon, radius_km=10, limit=20):
     """Find pharmacies within a certain radius"""
+<<<<<<< HEAD
+=======
+    from .models import Pharmacy
+>>>>>>> 69d80ea1d11244458099194d4be1c9ea55921521
     
     if lat is None or lon is None:
         return []
