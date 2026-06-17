@@ -280,6 +280,23 @@ def profile_view(request):
     }
     return render(request, 'core/profile.html', context)
 
+
+@login_required
+def add_medication(request):
+    """Add a medication to user's list"""
+    if request.method == 'POST':
+        medication_name = request.POST.get('medication_name', '').strip()
+        if medication_name:
+            UserMedication.objects.get_or_create(
+                user=request.user,
+                medication_name=medication_name
+            )
+            messages.success(request, f'Added {medication_name} to your medications.')
+        else:
+            messages.error(request, 'Please enter a medication name.')
+    return redirect('profile')
+
+
 @login_required
 def prescription_upload_view(request):
     if request.method == 'POST':
@@ -309,17 +326,37 @@ def delete_prescription_view(request, pk):
     return redirect('prescription_list')
 
 
-
 @login_required
 def update_health(request):
-    """Update user's health profile"""
+    """Update user's health profile with new fields"""
     if request.method == 'POST':
         health_profile, created = UserHealthProfile.objects.get_or_create(user=request.user)
-        health_profile.bp = request.POST.get('bp')
-        health_profile.cholesterol = request.POST.get('cholesterol')
-        health_profile.na_to_k = request.POST.get('na_to_k')
+        
+        # Update only if values are provided
+        if request.POST.get('bp'):
+            health_profile.bp = request.POST.get('bp')
+        if request.POST.get('cholesterol'):
+            health_profile.cholesterol = request.POST.get('cholesterol')
+        if request.POST.get('blood_sugar'):
+            health_profile.blood_sugar = request.POST.get('blood_sugar')
+        if request.POST.get('weight'):
+            try:
+                health_profile.weight = float(request.POST.get('weight'))
+            except ValueError:
+                pass
+        if request.POST.get('height'):
+            try:
+                health_profile.height = float(request.POST.get('height'))
+            except ValueError:
+                pass
+        if request.POST.get('allergies'):
+            health_profile.allergies = request.POST.get('allergies')
+        if request.POST.get('chronic_conditions'):
+            health_profile.chronic_conditions = request.POST.get('chronic_conditions')
+        
         health_profile.save()
         messages.success(request, 'Health information updated successfully!')
+    
     return redirect('profile')
 
 
@@ -454,3 +491,26 @@ def symptom_detail_view(request, pk):
     """View detailed symptom analysis"""
     prediction = get_object_or_404(SymptomPrediction, id=pk, user=request.user)
     return render(request, 'core/symptom_detail.html', {'prediction': prediction})
+
+
+@login_required
+def update_location_view(request):
+    """Update user's location"""
+    if request.method == 'POST':
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
+        
+        if latitude and longitude:
+            try:
+                request.user.latitude = float(latitude)
+                request.user.longitude = float(longitude)
+                request.user.save()
+                messages.success(request, 'Location updated successfully!')
+            except ValueError:
+                messages.error(request, 'Invalid location coordinates.')
+        else:
+            messages.error(request, 'Please provide both latitude and longitude.')
+    
+    # Redirect back to the page they came from
+    next_url = request.META.get('HTTP_REFERER', 'profile')
+    return redirect(next_url)

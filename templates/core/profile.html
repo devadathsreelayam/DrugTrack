@@ -3,6 +3,212 @@
 
 {% block title %}My Profile - DrugTrack{% endblock %}
 
+{% block extra_css %}
+<style>
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2c7da0, #61a5c2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 3rem;
+        color: white;
+    }
+    
+    .stat-box {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        height: 100%;
+        transition: all 0.3s;
+    }
+    
+    .stat-box:hover {
+        background: #f1f5f9;
+        transform: translateY(-2px);
+    }
+    
+    .stat-box .number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    
+    .stat-box .label {
+        font-size: 0.85rem;
+        color: #64748b;
+        margin: 0;
+    }
+    
+    .stat-box i {
+        font-size: 1.5rem;
+        color: #2c7da0;
+        margin-bottom: 8px;
+    }
+    
+    .health-card {
+        border-left: 4px solid #2c7da0;
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 15px 20px;
+        margin-bottom: 10px;
+    }
+    
+    .health-card .label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+    
+    .health-card .value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+    
+    .health-card .value.high { color: #ef4444; }
+    .health-card .value.normal { color: #22c55e; }
+    .health-card .value.low { color: #f59e0b; }
+    
+    .med-tag {
+        display: inline-block;
+        background: #e0f2fe;
+        color: #0369a1;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        margin: 4px 8px 4px 0;
+        transition: all 0.2s;
+    }
+    
+    .med-tag:hover {
+        background: #bae6fd;
+    }
+    
+    .med-tag .remove-med {
+        margin-left: 8px;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+        font-weight: 700;
+    }
+    
+    .med-tag .remove-med:hover {
+        opacity: 1;
+    }
+    
+    .bmi-indicator {
+        display: inline-block;
+        padding: 4px 14px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .bmi-indicator.underweight { background: #fef3c7; color: #92400e; }
+    .bmi-indicator.normal { background: #dcfce7; color: #166534; }
+    .bmi-indicator.overweight { background: #fef3c7; color: #92400e; }
+    .bmi-indicator.obese { background: #fee2e2; color: #991b1b; }
+    
+    .modal-content {
+        border-radius: 15px;
+        border: none;
+    }
+    
+    .modal-header {
+        background: linear-gradient(135deg, #2c7da0, #61a5c2);
+        color: white;
+        border-radius: 15px 15px 0 0;
+    }
+    
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+    
+    .quick-add-btn {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        padding: 4px 14px;
+        border-radius: 15px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #475569;
+        display: inline-block;
+        margin: 2px 4px;
+    }
+    
+    .quick-add-btn:hover {
+        background: #e2e8f0;
+        border-color: #2c7da0;
+        color: #2c7da0;
+    }
+    
+    /* Location Card */
+    .location-map {
+        height: 200px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #e2e8f0;
+        margin: 10px 0;
+        background: #f8fafc;
+        position: relative;
+    }
+    
+    .location-map .map-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        flex-direction: column;
+        color: #94a3b8;
+    }
+    
+    .location-map .map-placeholder i {
+        font-size: 3rem;
+        margin-bottom: 10px;
+        color: #cbd5e1;
+    }
+    
+    .location-coords {
+        font-size: 13px;
+        color: #64748b;
+        font-family: monospace;
+    }
+    
+    .location-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 14px;
+        border-radius: 15px;
+        font-size: 13px;
+        font-weight: 500;
+    }
+    
+    .location-status.set {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .location-status.not-set {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .location-status i {
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
 {% block breadcrumb %}
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
@@ -13,31 +219,92 @@
 {% endblock %}
 
 {% block content %}
-<div class="row">
+<div class="row g-4">
+    <!-- Left Column - Profile Summary -->
     <div class="col-md-4">
+        <!-- Profile Card -->
         <div class="card">
-            <div class="card-header">
-                <i class="fas fa-user-circle"></i> Profile Summary
-            </div>
             <div class="card-body text-center">
-                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
-                <h4>{{ user.username }}</h4>
-                <p class="text-muted">{{ user.email }}</p>
-                <hr>
-                <div class="row">
+                <div class="profile-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-muted mb-2">
+                    <i class="fas fa-envelope"></i> {{ user.email }}
+                </p>
+                <p class="text-muted mb-3">
+                    <i class="fas fa-calendar"></i> Joined {{ user.date_joined|date:"M d, Y" }}
+                </p>
+                <div class="row g-2">
                     <div class="col-6">
-                        <small class="text-muted">Symptom checks</small>
-                        <h5>{{ total_symptom_checks }}</h5>
+                        <div class="stat-box">
+                            <i class="fas fa-stethoscope"></i>
+                            <div class="number">{{ total_symptom_checks }}</div>
+                            <p class="label">Symptom Checks</p>
+                        </div>
                     </div>
                     <div class="col-6">
-                        <small class="text-muted">Prescriptions</small>
-                        <h5>{{ total_prescriptions }}</h5>
+                        <div class="stat-box">
+                            <i class="fas fa-file-prescription"></i>
+                            <div class="number">{{ total_prescriptions }}</div>
+                            <p class="label">Prescriptions</p>
+                        </div>
                     </div>
+                </div>
+                
+                {% if user.role == 'patient' %}
+                <div class="mt-3">
+                    <a href="{% url 'pharmacy_register' %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-store"></i> Register Pharmacy
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Location Card -->
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-map-marker-alt"></i> My Location
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#locationModal">
+                    <i class="fas fa-edit"></i> Update
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="location-map" id="locationMap">
+                    <div class="map-placeholder" id="mapPlaceholder">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <p class="mb-0">Click "Update" to set your location</p>
+                    </div>
+                    <div id="mapContainer" style="display: none; height: 100%; width: 100%;"></div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div>
+                        {% if user.latitude and user.longitude %}
+                        <span class="location-status set">
+                            <i class="fas fa-check-circle"></i> Location set
+                        </span>
+                        <div class="location-coords mt-1">
+                            Lat: {{ user.latitude|floatformat:6 }}, Lng: {{ user.longitude|floatformat:6 }}
+                        </div>
+                        {% else %}
+                        <span class="location-status not-set">
+                            <i class="fas fa-exclamation-triangle"></i> Location not set
+                        </span>
+                        {% endif %}
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="getCurrentLocation()">
+                        <i class="fas fa-location-dot"></i> Use Current
+                    </button>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- Right Column - Edit Profile -->
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
@@ -54,102 +321,541 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Add this after the edit profile card -->
-    <div class="card mt-4">
-        <div class="card-header">
-            <i class="fas fa-heartbeat"></i> Health Profile
-            <button class="btn btn-sm btn-primary float-end" data-bs-toggle="modal" data-bs-target="#healthModal">
-                <i class="fas fa-edit"></i> Update
-            </button>
-        </div>
-        <div class="card-body">
-            {% if user.health_profile %}
-            <div class="row">
-                <div class="col-md-4">
-                    <small class="text-muted">Blood Pressure</small>
-                    <h5>{{ user.health_profile.bp }}</h5>
+<!-- Health Profile Section -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-heartbeat"></i> Health Profile
                 </div>
-                <div class="col-md-4">
-                    <small class="text-muted">Cholesterol</small>
-                    <h5>{{ user.health_profile.cholesterol }}</h5>
-                </div>
-                <div class="col-md-4">
-                    <small class="text-muted">Na/K Ratio</small>
-                    <h5>{{ user.health_profile.na_to_k }}</h5>
-                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#healthModal">
+                    <i class="fas fa-edit"></i> Update
+                </button>
             </div>
-            {% else %}
-            <p class="text-muted">No health data available. <a href="{% url 'signup_stage3' %}">Add now</a></p>
-            {% endif %}
+            <div class="card-body">
+                {% if user.health_profile %}
+                <div class="row g-3">
+                    <!-- Blood Pressure -->
+                    <div class="col-md-3">
+                        <div class="health-card">
+                            <div class="label">Blood Pressure</div>
+                            <div class="value {% if user.health_profile.bp == 'HIGH' %}high{% elif user.health_profile.bp == 'LOW' %}low{% else %}normal{% endif %}">
+                                {{ user.health_profile.bp|default:"Not set"|title }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cholesterol -->
+                    <div class="col-md-3">
+                        <div class="health-card">
+                            <div class="label">Cholesterol</div>
+                            <div class="value {% if user.health_profile.cholesterol == 'HIGH' %}high{% else %}normal{% endif %}">
+                                {{ user.health_profile.cholesterol|default:"Not set"|title }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blood Sugar -->
+                    <div class="col-md-3">
+                        <div class="health-card">
+                            <div class="label">Blood Sugar</div>
+                            <div class="value {% if user.health_profile.blood_sugar == 'DIABETIC' %}high{% elif user.health_profile.blood_sugar == 'PRE_DIABETIC' %}low{% else %}normal{% endif %}">
+                                {{ user.health_profile.blood_sugar|default:"Not set"|title }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- BMI -->
+                    <div class="col-md-3">
+                        <div class="health-card">
+                            <div class="label">BMI</div>
+                            <div>
+                                {% if user.health_profile.bmi %}
+                                <span class="value">{{ user.health_profile.bmi }}</span>
+                                <span class="bmi-indicator {{ user.health_profile.bmi_category|lower }}">
+                                    {{ user.health_profile.bmi_category }}
+                                </span>
+                                {% else %}
+                                <span class="value" style="color: #94a3b8;">Not set</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Allergies -->
+                    {% if user.health_profile.allergies %}
+                    <div class="col-md-6">
+                        <div class="health-card">
+                            <div class="label">Allergies</div>
+                            <div class="value">{{ user.health_profile.allergies }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Chronic Conditions -->
+                    {% if user.health_profile.chronic_conditions %}
+                    <div class="col-md-6">
+                        <div class="health-card">
+                            <div class="label">Chronic Conditions</div>
+                            <div class="value">{{ user.health_profile.chronic_conditions }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-heartbeat fa-3x text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No health data available.</p>
+                    <button class="btn btn-sm btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#healthModal">
+                        <i class="fas fa-plus"></i> Add Health Details
+                    </button>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <i class="fas fa-pills"></i> Current Medications
-            <button class="btn btn-sm btn-primary float-end" data-bs-toggle="modal" data-bs-target="#medicationModal">
-                <i class="fas fa-plus"></i> Add
-            </button>
-        </div>
-        <div class="card-body">
-            {% if user.medications.all %}
-            <div class="row">
-                {% for med in user.medications.all %}
-                <div class="col-md-3 mb-2">
-                    <span class="badge bg-primary p-2">
-                        {{ med.medication_name }}
-                        <a href="{% url 'remove_medication' med.id %}" class="text-white ms-2" onclick="return confirm('Remove this medication?')">
+<!-- Medications Section -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="fas fa-pills"></i> Current Medications
+                </div>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#medicationModal">
+                    <i class="fas fa-plus"></i> Add Medication
+                </button>
+            </div>
+            <div class="card-body">
+                {% if user.medications.all %}
+                <div class="d-flex flex-wrap">
+                    {% for med in user.medications.all %}
+                    <span class="med-tag">
+                        <i class="fas fa-capsules"></i> {{ med.medication_name }}
+                        <span class="remove-med" onclick="removeMedication('{% url 'remove_medication' med.id %}')">
                             <i class="fas fa-times-circle"></i>
-                        </a>
+                        </span>
                     </span>
+                    {% endfor %}
                 </div>
-                {% endfor %}
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-pills fa-2x text-muted mb-2"></i>
+                    <p class="text-muted mb-0">No medications added yet.</p>
+                    <button class="btn btn-sm btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#medicationModal">
+                        <i class="fas fa-plus"></i> Add Your First Medication
+                    </button>
+                </div>
+                {% endif %}
             </div>
-            {% else %}
-            <p class="text-muted">No medications added yet.</p>
-            {% endif %}
         </div>
     </div>
+</div>
 
-    <!-- Health Modal -->
-    <div class="modal fade" id="healthModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Update Health Information</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <form method="POST" action="{% url 'update_health' %}">
-                    {% csrf_token %}
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Blood Pressure</label>
-                            <select name="bp" class="form-select" required>
+<!-- ============================================ -->
+<!-- MODALS -->
+<!-- ============================================ -->
+
+<!-- Health Modal -->
+<div class="modal fade" id="healthModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-heartbeat"></i> Update Health Information
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'update_health' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Blood Pressure</label>
+                            <select name="bp" class="form-select">
+                                <option value="">Select</option>
                                 <option value="HIGH" {% if user.health_profile.bp == 'HIGH' %}selected{% endif %}>High</option>
                                 <option value="LOW" {% if user.health_profile.bp == 'LOW' %}selected{% endif %}>Low</option>
                                 <option value="NORMAL" {% if user.health_profile.bp == 'NORMAL' %}selected{% endif %}>Normal</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Cholesterol</label>
-                            <select name="cholesterol" class="form-select" required>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Cholesterol</label>
+                            <select name="cholesterol" class="form-select">
+                                <option value="">Select</option>
                                 <option value="HIGH" {% if user.health_profile.cholesterol == 'HIGH' %}selected{% endif %}>High</option>
                                 <option value="NORMAL" {% if user.health_profile.cholesterol == 'NORMAL' %}selected{% endif %}>Normal</option>
                             </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Na to K Ratio</label>
-                            <input type="number" step="0.1" name="na_to_k" class="form-control" value="{{ user.health_profile.na_to_k }}" required>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Blood Sugar</label>
+                            <select name="blood_sugar" class="form-select">
+                                <option value="">Select</option>
+                                <option value="NORMAL" {% if user.health_profile.blood_sugar == 'NORMAL' %}selected{% endif %}>Normal (70-100 mg/dL)</option>
+                                <option value="PRE_DIABETIC" {% if user.health_profile.blood_sugar == 'PRE_DIABETIC' %}selected{% endif %}>Pre-diabetic (100-125 mg/dL)</option>
+                                <option value="DIABETIC" {% if user.health_profile.blood_sugar == 'DIABETIC' %}selected{% endif %}>Diabetic (126+ mg/dL)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Weight (kg)</label>
+                            <input type="number" step="0.1" name="weight" class="form-control" 
+                                   value="{{ user.health_profile.weight|default:'' }}" placeholder="e.g., 70.5">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Height (m)</label>
+                            <input type="number" step="0.01" name="height" class="form-control" 
+                                   value="{{ user.health_profile.height|default:'' }}" placeholder="e.g., 1.75">
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Allergies</label>
+                            <input type="text" name="allergies" class="form-control" 
+                                   value="{{ user.health_profile.allergies|default:'' }}" 
+                                   placeholder="e.g., Penicillin, Dust, Pollen">
+                            <small class="text-muted">Separate multiple allergies with commas</small>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label fw-bold">Chronic Conditions</label>
+                            <input type="text" name="chronic_conditions" class="form-control" 
+                                   value="{{ user.health_profile.chronic_conditions|default:'' }}" 
+                                   placeholder="e.g., Diabetes, Hypertension, Asthma">
+                            <small class="text-muted">Separate multiple conditions with commas</small>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Health Details
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Medication Modal -->
+<div class="modal fade" id="medicationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-pills"></i> Add Medication
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{% url 'add_medication' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Medication Name</label>
+                        <input type="text" name="medication_name" class="form-control" 
+                               placeholder="Enter medication name" required>
                     </div>
-                </form>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Quick Add</label>
+                        <div>
+                            <span class="quick-add-btn" onclick="fillMedication('Paracetamol')">Paracetamol</span>
+                            <span class="quick-add-btn" onclick="fillMedication('Aspirin')">Aspirin</span>
+                            <span class="quick-add-btn" onclick="fillMedication('Ibuprofen')">Ibuprofen</span>
+                            <span class="quick-add-btn" onclick="fillMedication('Metformin')">Metformin</span>
+                            <span class="quick-add-btn" onclick="fillMedication('Amlodipine')">Amlodipine</span>
+                            <span class="quick-add-btn" onclick="fillMedication('Atorvastatin')">Atorvastatin</span>
+                            <span class="quick-add-btn" onclick="fillMedication('Omeprazole')">Omeprazole</span>
+                            <span class="quick-add-btn" onclick="fillMedication('Lisinopril')">Lisinopril</span>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <small>
+                            Adding your medications helps us check for potential drug interactions.
+                            You can add multiple medications from the profile page.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Add Medication
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Location Modal -->
+<div class="modal fade" id="locationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-map-marked-alt"></i> Set Your Location
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-md-5">
+                            <input type="text" id="locationSearch" class="form-control" 
+                                   placeholder="Search for a location...">
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary w-100" onclick="searchLocation()">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-success w-100" onclick="getCurrentLocationModal()">
+                                <i class="fas fa-location-dot"></i> Use Current Location
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="locationMapModal" style="height: 400px; border-radius: 10px; border: 2px solid #e2e8f0;"></div>
+                <div class="mt-3">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Latitude</label>
+                            <input type="text" id="modalLatitude" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Longitude</label>
+                            <input type="text" id="modalLongitude" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div id="modalAddress" class="mt-2 text-muted" style="display: none;">
+                        <i class="fas fa-map-pin"></i> <span id="modalAddressText"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveLocation()">
+                    <i class="fas fa-save"></i> Save Location
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// ============================================
+// LOCATION FUNCTIONS
+// ============================================
+
+let mapModal = null;
+let markerModal = null;
+let currentLat = {{ user.latitude|default:'null' }};
+let currentLng = {{ user.longitude|default:'null' }};
+
+function initLocationMap() {
+    const defaultLat = currentLat || 20.5937;
+    const defaultLng = currentLng || 78.9629;
+    
+    mapModal = L.map('locationMapModal').setView([defaultLat, defaultLng], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(mapModal);
+    
+    // Add marker if location exists
+    if (currentLat && currentLng) {
+        markerModal = L.marker([currentLat, currentLng]).addTo(mapModal);
+    }
+    
+    // Click handler
+    mapModal.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        updateMarker(lat, lng);
+        reverseGeocode(lat, lng);
+    });
+    
+    // Handle resize
+    setTimeout(function() {
+        mapModal.invalidateSize();
+    }, 500);
+}
+
+function updateMarker(lat, lng) {
+    if (markerModal) {
+        mapModal.removeLayer(markerModal);
+    }
+    markerModal = L.marker([lat, lng]).addTo(mapModal);
+    mapModal.setView([lat, lng], 16);
+    
+    document.getElementById('modalLatitude').value = lat.toFixed(6);
+    document.getElementById('modalLongitude').value = lng.toFixed(6);
+    currentLat = lat;
+    currentLng = lng;
+}
+
+function reverseGeocode(lat, lng) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18`;
+    
+    fetch(url, {
+        headers: { 'User-Agent': 'DrugTrack/1.0' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.display_name) {
+            document.getElementById('modalAddress').style.display = 'block';
+            document.getElementById('modalAddressText').textContent = data.display_name;
+        }
+    })
+    .catch(() => {});
+}
+
+function searchLocation() {
+    const query = document.getElementById('locationSearch').value.trim();
+    if (!query) return;
+    
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+    
+    fetch(url, {
+        headers: { 'User-Agent': 'DrugTrack/1.0' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lng = parseFloat(data[0].lon);
+            updateMarker(lat, lng);
+            reverseGeocode(lat, lng);
+            document.getElementById('modalAddressText').textContent = data[0].display_name;
+            document.getElementById('modalAddress').style.display = 'block';
+        }
+    })
+    .catch(() => {});
+}
+
+function getCurrentLocationModal() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                updateMarker(lat, lng);
+                reverseGeocode(lat, lng);
+            },
+            function() {
+                alert('Unable to get location. Please allow location access.');
+            }
+        );
+    } else {
+        alert('Geolocation is not supported by your browser.');
+    }
+}
+
+function saveLocation() {
+    if (currentLat && currentLng) {
+        fetch('{% url "update_location" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `latitude=${currentLat}&longitude=${currentLng}`
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        });
+    }
+}
+
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                fetch('{% url "update_location" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: `latitude=${lat}&longitude=${lng}`
+                })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                });
+            },
+            function() {
+                alert('Unable to get location. Please allow location access.');
+            }
+        );
+    } else {
+        alert('Geolocation is not supported by your browser.');
+    }
+}
+
+// ============================================
+// MEDICATION FUNCTIONS
+// ============================================
+
+function fillMedication(name) {
+    document.querySelector('input[name="medication_name"]').value = name;
+}
+
+function removeMedication(url) {
+    if (confirm('Remove this medication from your list?')) {
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        });
+    }
+}
+
+// ============================================
+// INIT
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize location map when modal opens
+    document.getElementById('locationModal').addEventListener('shown.bs.modal', function() {
+        setTimeout(function() {
+            if (!mapModal) {
+                initLocationMap();
+            } else {
+                mapModal.invalidateSize();
+                if (currentLat && currentLng) {
+                    mapModal.setView([currentLat, currentLng], 16);
+                }
+            }
+        }, 300);
+    });
+});
+</script>
+
+<!-- Leaflet CSS & JS for Location Modal -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 {% endblock %}

@@ -21,8 +21,12 @@ urlpatterns = [
     path('prescription/list/', views.prescription_list_view, name='prescription_list'),
     path('prescription/delete/<int:pk>/', views.delete_prescription_view, name='delete_prescription'),
 
+    # Location - Add this
+    path('update-location/', views.update_location_view, name='update_location'),
+
     # Medication
     path('update-health/', views.update_health, name='update_health'),
+    path('add-medication/', views.add_medication, name='add_medication'),
     path('remove-medication/<int:med_id>/', views.remove_medication, name='remove_medication'),
 
     # Symptom Checker URLs
