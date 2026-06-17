@@ -10,7 +10,9 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Starting medicine seeding...'))
         
         medicines = [
-            # Common Medicines
+            # =====================================================
+            # Existing Medicines (keeping them for reference)
+            # =====================================================
             {
                 'name': 'Paracetamol',
                 'generic_name': 'Acetaminophen',
@@ -231,6 +233,360 @@ class Command(BaseCommand):
                 'tags': 'ayurvedic, digestion',
                 'requires_prescription': False,
             },
+            
+            # =====================================================
+            # NEW DRUGS (Added below)
+            # =====================================================
+            
+            # Cardiovascular
+            {
+                'name': 'Losartan',
+                'generic_name': 'Losartan Potassium',
+                'drug_type': 'tablet',
+                'manufacturer': 'Merck',
+                'description': 'Used to treat high blood pressure and protect kidneys in diabetic patients.',
+                'dosage_form': '50mg',
+                'categories': 'blood pressure, hypertension',
+                'tags': 'bp, hypertension, kidney',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Clopidogrel',
+                'generic_name': 'Clopidogrel Bisulfate',
+                'drug_type': 'tablet',
+                'manufacturer': 'Sanofi',
+                'description': 'Used to prevent blood clots and reduce heart attack/stroke risk.',
+                'dosage_form': '75mg',
+                'categories': 'heart, blood thinner',
+                'tags': 'heart, clot, stroke',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Rosuvastatin',
+                'generic_name': 'Rosuvastatin Calcium',
+                'drug_type': 'tablet',
+                'manufacturer': 'AstraZeneca',
+                'description': 'Used to lower cholesterol and triglycerides.',
+                'dosage_form': '10mg',
+                'categories': 'cholesterol, heart',
+                'tags': 'cholesterol, statin',
+                'requires_prescription': True,
+            },
+            
+            # Diabetes
+            {
+                'name': 'Glimepiride',
+                'generic_name': 'Glimepiride',
+                'drug_type': 'tablet',
+                'manufacturer': 'Sanofi',
+                'description': 'Used with diet and exercise to control blood sugar in type 2 diabetes.',
+                'dosage_form': '2mg',
+                'categories': 'diabetes, blood sugar',
+                'tags': 'diabetes, sugar',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Sitagliptin',
+                'generic_name': 'Sitagliptin Phosphate',
+                'drug_type': 'tablet',
+                'manufacturer': 'Merck',
+                'description': 'Used to control blood sugar in type 2 diabetes.',
+                'dosage_form': '100mg',
+                'categories': 'diabetes, blood sugar',
+                'tags': 'diabetes, sugar',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Insulin Aspart',
+                'generic_name': 'Insulin Aspart',
+                'drug_type': 'injection',
+                'manufacturer': 'Novo Nordisk',
+                'description': 'Rapid-acting insulin for blood sugar control in diabetes.',
+                'dosage_form': '100 units/mL',
+                'categories': 'diabetes, blood sugar, insulin',
+                'tags': 'diabetes, insulin',
+                'requires_prescription': True,
+            },
+            
+            # Respiratory
+            {
+                'name': 'Salbutamol',
+                'generic_name': 'Albuterol',
+                'drug_type': 'inhaler',
+                'manufacturer': 'Cipla',
+                'description': 'Used to relieve bronchospasm in asthma and COPD.',
+                'dosage_form': '100mcg',
+                'categories': 'asthma, respiratory',
+                'tags': 'asthma, inhaler, COPD',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Budesonide',
+                'generic_name': 'Budesonide',
+                'drug_type': 'inhaler',
+                'manufacturer': 'AstraZeneca',
+                'description': 'Used for maintenance treatment of asthma and COPD.',
+                'dosage_form': '200mcg',
+                'categories': 'asthma, respiratory',
+                'tags': 'asthma, inhaler, steroid',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Montelukast',
+                'generic_name': 'Montelukast Sodium',
+                'drug_type': 'tablet',
+                'manufacturer': 'Cipla',
+                'description': 'Used for prevention of asthma and allergy symptoms.',
+                'dosage_form': '10mg',
+                'categories': 'asthma, allergy',
+                'tags': 'asthma, allergy',
+                'requires_prescription': True,
+            },
+            
+            # Antibiotics
+            {
+                'name': 'Doxycycline',
+                'generic_name': 'Doxycycline Hyclate',
+                'drug_type': 'capsule',
+                'manufacturer': 'Pfizer',
+                'description': 'Used to treat bacterial infections including acne, Lyme disease, and respiratory infections.',
+                'dosage_form': '100mg',
+                'categories': 'antibiotic, infection',
+                'tags': 'antibiotic, bacterial',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Cefixime',
+                'generic_name': 'Cefixime',
+                'drug_type': 'tablet',
+                'manufacturer': 'Cipla',
+                'description': 'Cephalosporin antibiotic used to treat bacterial infections.',
+                'dosage_form': '200mg',
+                'categories': 'antibiotic, infection',
+                'tags': 'antibiotic, bacterial',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Clindamycin',
+                'generic_name': 'Clindamycin',
+                'drug_type': 'capsule',
+                'manufacturer': 'Pfizer',
+                'description': 'Used to treat serious bacterial infections including MRSA.',
+                'dosage_form': '300mg',
+                'categories': 'antibiotic, infection',
+                'tags': 'antibiotic, MRSA',
+                'requires_prescription': True,
+            },
+            
+            # Pain & Inflammation
+            {
+                'name': 'Ibuprofen',
+                'generic_name': 'Ibuprofen',
+                'drug_type': 'tablet',
+                'manufacturer': 'Pfizer',
+                'description': 'Used for pain relief, fever reduction, and inflammation.',
+                'dosage_form': '400mg',
+                'categories': 'pain, inflammation',
+                'tags': 'pain, fever, anti-inflammatory',
+                'requires_prescription': False,
+            },
+            {
+                'name': 'Celecoxib',
+                'generic_name': 'Celecoxib',
+                'drug_type': 'capsule',
+                'manufacturer': 'Pfizer',
+                'description': 'Used for arthritis pain, menstrual pain, and inflammation.',
+                'dosage_form': '200mg',
+                'categories': 'pain, inflammation, arthritis',
+                'tags': 'pain, arthritis, anti-inflammatory',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Tramadol',
+                'generic_name': 'Tramadol Hydrochloride',
+                'drug_type': 'tablet',
+                'manufacturer': 'Sun Pharma',
+                'description': 'Used for moderate to severe pain relief.',
+                'dosage_form': '50mg',
+                'categories': 'pain, severe pain',
+                'tags': 'pain, analgesic',
+                'requires_prescription': True,
+            },
+            
+            # Gastrointestinal
+            {
+                'name': 'Domp\u00e9ridone',  # \u00e9 is the Unicode for 'e' with accent
+                'generic_name': 'Domp\u00e9ridone',
+                'drug_type': 'tablet',
+                'manufacturer': 'Johnson & Johnson',
+                'description': 'Used to treat nausea, vomiting, and bloating.',
+                'dosage_form': '10mg',
+                'categories': 'digestion, nausea',
+                'tags': 'nausea, vomiting, digestion',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Ranitidine',
+                'generic_name': 'Ranitidine Hydrochloride',
+                'drug_type': 'tablet',
+                'manufacturer': 'GSK',
+                'description': 'Used to treat heartburn, acid reflux, and stomach ulcers.',
+                'dosage_form': '150mg',
+                'categories': 'acid reflux, stomach',
+                'tags': 'reflux, acidity, heartburn',
+                'requires_prescription': False,
+            },
+            {
+                'name': 'Loperamide',
+                'generic_name': 'Loperamide Hydrochloride',
+                'drug_type': 'capsule',
+                'manufacturer': 'Johnson & Johnson',
+                'description': 'Used for treatment of diarrhea.',
+                'dosage_form': '2mg',
+                'categories': 'digestion, diarrhea',
+                'tags': 'diarrhea, stomach',
+                'requires_prescription': False,
+            },
+            
+            # Allergy
+            {
+                'name': 'Cetirizine',
+                'generic_name': 'Cetirizine Hydrochloride',
+                'drug_type': 'tablet',
+                'manufacturer': 'Cipla',
+                'description': 'Used for seasonal allergies, runny nose, and itching.',
+                'dosage_form': '10mg',
+                'categories': 'allergy, antihistamine',
+                'tags': 'allergy, antihistamine',
+                'requires_prescription': False,
+            },
+            {
+                'name': 'Fexofenadine',
+                'generic_name': 'Fexofenadine Hydrochloride',
+                'drug_type': 'tablet',
+                'manufacturer': 'Sanofi',
+                'description': 'Used for allergies and hay fever.',
+                'dosage_form': '120mg',
+                'categories': 'allergy, antihistamine',
+                'tags': 'allergy, antihistamine',
+                'requires_prescription': False,
+            },
+            {
+                'name': 'Loratadine',
+                'generic_name': 'Loratadine',
+                'drug_type': 'tablet',
+                'manufacturer': 'Cipla',
+                'description': 'Used for allergies, hay fever, and urticaria.',
+                'dosage_form': '10mg',
+                'categories': 'allergy, antihistamine',
+                'tags': 'allergy, antihistamine',
+                'requires_prescription': False,
+            },
+            
+            # Mental Health
+            {
+                'name': 'Sertraline',
+                'generic_name': 'Sertraline Hydrochloride',
+                'drug_type': 'tablet',
+                'manufacturer': 'Pfizer',
+                'description': 'Used to treat depression, anxiety, OCD, and PTSD.',
+                'dosage_form': '50mg',
+                'categories': 'depression, anxiety',
+                'tags': 'depression, anxiety, mental health',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Escitalopram',
+                'generic_name': 'Escitalopram Oxalate',
+                'drug_type': 'tablet',
+                'manufacturer': 'Lundbeck',
+                'description': 'Used for depression and generalized anxiety disorder.',
+                'dosage_form': '10mg',
+                'categories': 'depression, anxiety',
+                'tags': 'depression, anxiety, mental health',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Alprazolam',
+                'generic_name': 'Alprazolam',
+                'drug_type': 'tablet',
+                'manufacturer': 'Pfizer',
+                'description': 'Used for anxiety disorders and panic attacks.',
+                'dosage_form': '0.5mg',
+                'categories': 'anxiety, panic',
+                'tags': 'anxiety, panic, benzodiazepine',
+                'requires_prescription': True,
+            },
+            
+            # Vitamins & Supplements
+            {
+                'name': 'Vitamin D3',
+                'generic_name': 'Cholecalciferol',
+                'drug_type': 'capsule',
+                'manufacturer': 'Abbott',
+                'description': 'Used to maintain healthy bones and immune function.',
+                'dosage_form': '1000 IU',
+                'categories': 'vitamins, immunity',
+                'tags': 'vitamin, supplement, bone health',
+                'requires_prescription': False,
+            },
+            {
+                'name': 'Calcium Carbonate',
+                'generic_name': 'Calcium Carbonate',
+                'drug_type': 'tablet',
+                'manufacturer': 'GSK',
+                'description': 'Used as a calcium supplement for bone health.',
+                'dosage_form': '500mg',
+                'categories': 'vitamins, bone health',
+                'tags': 'calcium, supplement, bone',
+                'requires_prescription': False,
+            },
+            {
+                'name': 'Iron Folic Acid',
+                'generic_name': 'Ferrous Sulfate + Folic Acid',
+                'drug_type': 'tablet',
+                'manufacturer': 'Cipla',
+                'description': 'Used to treat iron deficiency anemia and for pregnancy nutrition.',
+                'dosage_form': '100mg + 1.5mg',
+                'categories': 'vitamins, blood, pregnancy',
+                'tags': 'iron, anemia, pregnancy',
+                'requires_prescription': False,
+            },
+            
+            # Skin
+            {
+                'name': 'Betamethasone',
+                'generic_name': 'Betamethasone Dipropionate',
+                'drug_type': 'ointment',
+                'manufacturer': 'Merck',
+                'description': 'Used to treat skin inflammation, eczema, and psoriasis.',
+                'dosage_form': '0.05%',
+                'categories': 'skin, inflammation',
+                'tags': 'skin, eczema, psoriasis, steroid',
+                'requires_prescription': True,
+            },
+            {
+                'name': 'Miconazole',
+                'generic_name': 'Miconazole Nitrate',
+                'drug_type': 'ointment',
+                'manufacturer': 'Johnson & Johnson',
+                'description': 'Used to treat fungal infections of the skin.',
+                'dosage_form': '2%',
+                'categories': 'skin, fungal',
+                'tags': 'fungal, skin infection',
+                'requires_prescription': False,
+            },
+            {
+                'name': 'Tretinoin',
+                'generic_name': 'Tretinoin',
+                'drug_type': 'ointment',
+                'manufacturer': 'Cipla',
+                'description': 'Used for acne treatment and skin aging.',
+                'dosage_form': '0.025%',
+                'categories': 'skin, acne',
+                'tags': 'acne, skin, anti-aging',
+                'requires_prescription': True,
+            },
         ]
 
         created_count = 0
@@ -258,6 +614,12 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.SUCCESS(f'✓ Created: {medicine_data["name"]}'))
                 else:
                     updated_count += 1
+                    # Optionally update existing records if needed (comment out if you don't want to update)
+                    # if drug.generic_name != medicine_data['generic_name']:
+                    #     drug.generic_name = medicine_data['generic_name']
+                    #     drug.save()
+                    #     self.stdout.write(self.style.WARNING(f'• Updated: {medicine_data["name"]}'))
+                    # else:
                     self.stdout.write(self.style.WARNING(f'• Skipped: {medicine_data["name"]} (already exists)'))
                     
             except Exception as e:
