@@ -1,29 +1,45 @@
 from math import radians, sin, cos, sqrt, asin
-from django.db.models import Q
-from apps.pharmacy.models import Pharmacy
 
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     """
     Calculate the great circle distance between two points
-    on the earth (specified in decimal degrees)
+    Returns None if any parameter is None or invalid
     """
-    # Convert decimal degrees to radians
-    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    # Check for None values
+    if lat1 is None or lon1 is None or lat2 is None or lon2 is None:
+        return None
     
-    # Haversine formula
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * asin(sqrt(a))
-    
-    # Radius of earth in kilometers (use 3956 for miles)
-    r = 6371
-    return c * r
+    try:
+        # Convert to float
+        lat1 = float(lat1)
+        lon1 = float(lon1)
+        lat2 = float(lat2)
+        lon2 = float(lon2)
+        
+        # Convert decimal degrees to radians
+        lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+        
+        # Haversine formula
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+        a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+        c = 2 * asin(sqrt(a))
+        
+        # Radius of earth in kilometers
+        r = 6371
+        return c * r
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
 
 
 def find_nearby_pharmacies(lat, lon, radius_km=10, limit=20):
     """Find pharmacies within a certain radius"""
+    from .models import Pharmacy
+    
+    if lat is None or lon is None:
+        return []
+    
     pharmacies = Pharmacy.objects.filter(
         status='approved',
         is_active=True,
@@ -34,14 +50,14 @@ def find_nearby_pharmacies(lat, lon, radius_km=10, limit=20):
     nearby = []
     for pharmacy in pharmacies:
         distance = haversine_distance(lat, lon, pharmacy.latitude, pharmacy.longitude)
-        if distance <= radius_km:
+        if distance is not None and distance <= radius_km:
             nearby.append({
                 'pharmacy': pharmacy,
                 'distance': distance
             })
     
     # Sort by distance
-    nearby.sort(key=lambda x: x['distance'])
+    nearby.sort(key=lambda x: x['distance'] if x['distance'] is not None else 999999999)
     return nearby[:limit]
 
 

@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Pharmacy, PharmacyStock
+from .models import Pharmacy, PharmacyStock, Drug
 
 User = get_user_model()
 
@@ -108,20 +108,66 @@ class PharmacyStockForm(forms.ModelForm):
 
 
 class PharmacySearchForm(forms.Form):
-    """Form for searching pharmacies with drug availability"""
-    drug_name = forms.CharField(
-        max_length=200, 
+    """Form for searching pharmacies with multiple drugs"""
+    
+    drug_names = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={
+        widget=forms.Textarea(attrs={
             'class': 'form-control',
-            'placeholder': 'Search for a medicine...'
-        })
+            'rows': 3,
+            'placeholder': 'Enter drug names (one per line)\nExample:\nAmoxicillin\nParacetamol\nAspirin'
+        }),
+        label='Drugs to Search'
     )
+    
     city = forms.CharField(
-        max_length=100, 
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': 'City'
-        })
+        }),
+        label='City'
     )
+    
+    radius = forms.IntegerField(
+        required=False,
+        initial=10,
+        min_value=1,
+        max_value=100,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Radius in km'
+        }),
+        label='Search Radius (km)'
+    )
+    
+    match_type = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('all', 'Has ALL drugs'),
+            ('any', 'Has ANY drug'),
+            ('most', 'Has MOST drugs'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        }),
+        label='Match Type',
+        initial='any'
+    )
+    
+    def clean_drug_names(self):
+        """Parse drug names from textarea"""
+        text = self.cleaned_data.get('drug_names', '')
+        if not text:
+            return []
+        # Split by newline and comma, clean up
+        drugs = []
+        for line in text.strip().split('\n'):
+            line = line.strip()
+            if line:
+                # Split by comma if multiple on one line
+                for drug in line.split(','):
+                    drug = drug.strip()
+                    if drug:
+                        drugs.append(drug)
+        return drugs
