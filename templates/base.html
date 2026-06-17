@@ -248,29 +248,19 @@
                 {% if user.is_admin_user or user.is_staff %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link admin-link" href="{% url 'admin_dashboard' %}">
-                            <i class="fas fa-chart-line"></i> Admin Dashboard
-                        </a>
+                        <a class="nav-link admin-link" href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link admin-link" href="{% url 'admin_users' %}">
-                            <i class="fas fa-users"></i> Patients
-                        </a>
+                        <a class="nav-link admin-link" href="{% url 'admin_users' %}">Patients</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link admin-link" href="{% url 'admin_pharmacy_owners' %}">
-                            <i class="fas fa-store"></i> Pharmacy Owners
-                        </a>
+                        <a class="nav-link admin-link" href="{% url 'admin_pharmacy_owners' %}">Pharmacy Owners</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link admin-link" href="{% url 'admin_predictions' %}">
-                            <i class="fas fa-stethoscope"></i> Predictions
-                        </a>
+                        <a class="nav-link admin-link" href="{% url 'admin_predictions' %}">Predictions</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link admin-link" href="{% url 'admin_pharmacies' %}">
-                            <i class="fas fa-store"></i> Pharmacies
-                        </a>
+                        <a class="nav-link admin-link" href="{% url 'admin_pharmacies' %}">Pharmacies</a>
                     </li>
                 </ul>
                 
@@ -280,32 +270,19 @@
                 {% elif user.is_pharmacy_owner %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'pharmacy_dashboard' %}">
-                            <i class="fas fa-chart-line"></i> Dashboard
-                        </a>
+                        <a class="nav-link" href="{% url 'pharmacy_dashboard' %}">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'stock_management' %}">
-                            <i class="fas fa-cubes"></i> Inventory
-                        </a>
+                        <a class="nav-link" href="{% url 'stock_management' %}">Inventory</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'add_stock' %}">
-                            <i class="fas fa-plus-circle"></i> Add Stock
-                        </a>
+                        <a class="nav-link" href="{% url 'add_stock' %}">Add Stock</a>
                     </li>
                     {% if user.pharmacy %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'pharmacy_detail' user.pharmacy.id %}">
-                            <i class="fas fa-store"></i> My Pharmacy
-                        </a>
+                        <a class="nav-link" href="{% url 'pharmacy_detail' user.pharmacy.id %}">My Pharmacy</a>
                     </li>
                     {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link pharmacy-link" href="{% url 'pharmacy_list' %}">
-                            <i class="fas fa-search"></i> Browse Pharmacies
-                        </a>
-                    </li>
                 </ul>
                 
                 <!-- ============================================ -->
@@ -314,29 +291,19 @@
                 {% else %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard' %}">
-                            <i class="fas fa-chart-line"></i> Dashboard
-                        </a>
+                        <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'symptom_checker' %}">
-                            <i class="fas fa-stethoscope"></i> Symptom Checker
-                        </a>
+                        <a class="nav-link" href="{% url 'symptom_checker' %}">Symptom Checker</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'symptom_history' %}">
-                            <i class="fas fa-history"></i> History
-                        </a>
+                        <a class="nav-link" href="{% url 'symptom_history' %}">History</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'prescription_list' %}">
-                            <i class="fas fa-file-prescription"></i> Prescriptions
-                        </a>
+                        <a class="nav-link" href="{% url 'prescription_list' %}">Prescriptions</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link pharmacy-link" href="{% url 'pharmacy_list' %}">
-                            <i class="fas fa-store"></i> Find Pharmacy
-                        </a>
+                        <a class="nav-link pharmacy-link" href="{% url 'pharmacy_list' %}">Find Pharmacy</a>
                     </li>
                 </ul>
                 {% endif %}
@@ -373,15 +340,7 @@
                         </span>
                     </li>
                     
-                    <!-- Pharmacy Registration Link (for patients only) -->
-                    {% if user.is_patient %}
-                    <li class="nav-item">
-                        <a class="nav-link pharmacy-link" href="{% url 'pharmacy_register' %}">
-                            <i class="fas fa-store"></i> Register Pharmacy
-                        </a>
-                    </li>
-                    {% endif %}
-                    
+                   
                     <!-- User Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
