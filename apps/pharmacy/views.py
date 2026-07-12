@@ -272,6 +272,8 @@ def pharmacy_search(request):
         drug_names = form.cleaned_data.get('drug_names', [])
         city = form.cleaned_data.get('city')
         radius = form.cleaned_data.get('radius', 10)
+        radius = radius if radius else float('inf')
+        print('DEBUG: radius =', radius)
         match_type = form.cleaned_data.get('match_type', 'any')
         
         # Start with approved pharmacies
