@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-bottom: 15px;
+        transition: all 0.2s;
+        background: white;
+    }
+    .order-card:hover {
+        border-color: #2c7da0;
+        box-shadow: 0 4px 15px rgba(44,125,160,0.1);
+    }
+    .order-status {
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    .order-status.pending { background: #fef3c7; color: #92400e; }
+    .order-status.confirmed { background: #dbeafe; color: #1e40af; }
+    .order-status.processing { background: #e0f2fe; color: #0369a1; }
+    .order-status.ready_for_pickup { background: #dcfce7; color: #166534; }
+    .order-status.out_for_delivery { background: #fef3c7; color: #92400e; }
+    .order-status.delivered { background: #dcfce7; color: #166534; }
+    .order-status.cancelled { background: #fee2e2; color: #991b1b; }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item active">My Orders</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="text-white mb-4">
+            <i class="fas fa-box"></i> My Orders
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list"></i> Order History
+                <span class="badge bg-secondary float-end">{{ orders|length }} orders</span>
+            </div>
+            <div class="card-body">
+                {% if orders %}
+                    {% for order in orders %}
+                    <div class="order-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <h6 class="mb-1">
+                                    <a href="{% url 'order_detail' order.id %}" class="text-primary">
+                                        {{ order.order_number }}
+                                    </a>
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar"></i> {{ order.created_at|date:"M d, Y H:i" }}
+                                </small>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">Pharmacy</small>
+                                <br>
+                                <strong>{{ order.pharmacy.name }}</strong>
+                            </div>
+                            <div class="col-md-2">
+                                <small class="text-muted">Total</small>
+                                <br>
+                                <strong>₹{{ order.total_amount|floatformat:2 }}</strong>
+                            </div>
+                            <div class="col-md-2">
+                                <small class="text-muted">Status</small>
+                                <br>
+                                <span class="order-status {{ order.status }}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                                {% if order.can_cancel %}
+                                <a href="{% url 'cancel_order' order.id %}" class="btn btn-sm btn-danger"
+                                   onclick="return confirm('Cancel this order?')">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                        <h5>No Orders Yet</h5>
+                        <p class="text-muted">Place your first order from a pharmacy.</p>
+                        <a href="{% url 'pharmacy_list' %}" class="btn btn-primary">
+                            <i class="fas fa-store"></i> Browse Pharmacies
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

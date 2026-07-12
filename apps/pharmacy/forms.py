@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Pharmacy, PharmacyStock, Drug
+from .models import Pharmacy, PharmacyStock, Drug, Order
 
 User = get_user_model()
 
@@ -170,3 +170,72 @@ class PharmacySearchForm(forms.Form):
                     if drug:
                         drugs.append(drug)
         return drugs
+
+
+class OrderCreateForm(forms.ModelForm):
+    """Form for creating a new order"""
+    
+    class Meta:
+        model = Order
+        fields = ['delivery_option', 'notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 2,
+                'placeholder': 'Any special instructions...'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['delivery_option'].choices = [
+            ('pickup', 'Pick up from Pharmacy'),
+            ('delivery', 'Deliver to Address'),
+        ]
+        self.fields['delivery_option'].widget = forms.RadioSelect(attrs={
+            'class': 'form-check-input'
+        })
+        self.fields['delivery_option'].initial = 'pickup'
+        self.fields['notes'].required = False
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        delivery_option = cleaned_data.get('delivery_option')
+        if delivery_option not in ['pickup', 'delivery']:
+            self.add_error('delivery_option', 'Choose a valid delivery option.')
+        return cleaned_data
+
+
+class OrderStatusUpdateForm(forms.ModelForm):
+    """Form for pharmacy to update order status"""
+    
+    class Meta:
+        model = Order
+        fields = ['status', 'tracking_number', 'estimated_delivery', 'notes']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'tracking_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Courier tracking number'}),
+            'estimated_delivery': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only show relevant status options
+        current_status = self.instance.status if self.instance else 'pending'
+        status_choices = [
+            ('pending', 'Pending Confirmation'),
+            ('confirmed', 'Confirmed'),
+            ('processing', 'Processing'),
+            ('ready_for_pickup', 'Ready for Pickup'),
+            ('mailed', 'Mailed'),
+            ('out_for_delivery', 'Out for Delivery'),
+            ('delivered', 'Delivered'),
+            ('cancelled', 'Cancelled'),
+        ]
+        
+        # If order is already delivered or cancelled, limit options
+        if current_status in ['delivered', 'cancelled']:
+            status_choices = [(current_status, dict(Order.ORDER_STATUS_CHOICES).get(current_status))]
+        
+        self.fields['status'].choices = status_choices

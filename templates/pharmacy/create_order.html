@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Place Order - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-summary {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    .order-item {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 10px 0;
+    }
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    .price-breakdown {
+        border-top: 2px solid #e2e8f0;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'pharmacy_list' %}">Pharmacies</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'pharmacy_detail' pharmacy.id %}">{{ pharmacy.name }}</a></li>
+        <li class="breadcrumb-item active">Place Order</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-shopping-cart"></i> Place Order
+                <span class="badge bg-secondary float-end">{{ pharmacy.name }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Delivery Options</h6>
+                        <div class="row g-3">
+                            {% for choice in form.delivery_option %}
+                            <div class="col-md-6">
+                                <div class="form-check card p-3" style="cursor: pointer;">
+                                    {{ choice.tag }}
+                                    <label class="form-check-label" for="{{ choice.id_for_label }}">
+                                        {% if choice.choice_label == 'Pick up from Pharmacy' %}
+                                        <i class="fas fa-store text-primary"></i>
+                                        {% else %}
+                                        <i class="fas fa-truck text-success"></i>
+                                        {% endif %}
+                                        {{ choice.choice_label }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3" id="deliveryAddressField">
+                        {{ form.delivery_address|as_crispy_field }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Place Order
+                    </button>
+                    <a href="{% url 'pharmacy_detail' pharmacy.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-receipt"></i> Order Summary
+            </div>
+            <div class="card-body">
+                <div class="order-summary">
+                    {% for item in stock_items %}
+                    <div class="order-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ item.stock.drug.name }}</strong>
+                                <br>
+                                <small class="text-muted">Qty: {{ item.quantity }}</small>
+                            </div>
+                            <div>
+                                ₹{{ item.total|floatformat:2 }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="price-breakdown">
+                        <div class="d-flex justify-content-between">
+                            <span>Subtotal</span>
+                            <span>₹{{ total_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Packaging Charge</span>
+                            <span>₹{{ packaging_charge|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between" id="deliveryChargeRow">
+                            <span>Delivery Charge</span>
+                            <span id="deliveryChargeDisplay">₹0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total</span>
+                            <span id="totalDisplay">₹{{ total_amount|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deliveryOption = document.querySelector('input[name="delivery_option"]');
+    const deliveryAddressField = document.getElementById('deliveryAddressField');
+    const deliveryChargeRow = document.getElementById('deliveryChargeRow');
+    const deliveryChargeDisplay = document.getElementById('deliveryChargeDisplay');
+    const totalDisplay = document.getElementById('totalDisplay');
+    
+    const baseTotal = {{ total_amount|floatformat:2 }};
+    const packagingCharge = {{ packaging_charge|floatformat:2 }};
+    
+    function updateDeliveryOption() {
+        const selected = document.querySelector('input[name="delivery_option"]:checked');
+        if (selected) {
+            if (selected.value === 'delivery') {
+                deliveryAddressField.style.display = 'block';
+                // Calculate delivery charge based on distance
+                // For now, use a placeholder
+                const deliveryCharge = 50.00; // This should be calculated from the view
+                deliveryChargeDisplay.textContent = '₹' + deliveryCharge.toFixed(2);
+                totalDisplay.textContent = '₹' + (baseTotal + packagingCharge + deliveryCharge).toFixed(2);
+            } else {
+                deliveryAddressField.style.display = 'none';
+                deliveryChargeDisplay.textContent = '₹0.00';
+                totalDisplay.textContent = '₹' + (baseTotal + packagingCharge).toFixed(2);
+            }
+        }
+    }
+    
+    deliveryOption.addEventListener('change', updateDeliveryOption);
+    updateDeliveryOption();
+});
+</script>
+{% endblock %}

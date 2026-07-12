@@ -257,6 +257,13 @@
                             <a href="{% url 'pharmacy_detail' result.pharmacy.id %}" class="btn btn-sm btn-outline-primary mt-1">
                                 <i class="fas fa-eye"></i> View
                             </a>
+                            {% if result.found_count > 0 %}
+                                {% with first_drug=result.found_drugs|first %}
+                                <a href="{% url 'buy_now' result.pharmacy.id first_drug.drug.id %}" class="btn btn-sm btn-success mt-1">
+                                    <i class="fas fa-shopping-bag"></i> Buy Now
+                                </a>
+                                {% endwith %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>

@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Place Order - DrugTrack{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-summary {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+    }
+    .order-item {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 10px 0;
+    }
+    .order-item:last-child {
+        border-bottom: none;
+    }
+    .price-breakdown {
+        border-top: 2px solid #e2e8f0;
+        padding-top: 15px;
+        margin-top: 15px;
+    }
+    .quantity-input {
+        width: 70px;
+        padding: 5px 10px;
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+        text-align: center;
+    }
+    .quantity-input:focus {
+        border-color: #2c7da0;
+        outline: none;
+    }
+    .delivery-option-card {
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+    }
+    .delivery-option-card:hover {
+        border-color: #2c7da0;
+        background: #f8fafc;
+    }
+    .delivery-option-card.selected {
+        border-color: #2c7da0;
+        background: #f0f9ff;
+    }
+    .delivery-option-card input[type="radio"] {
+        margin-right: 10px;
+    }
+    .delivery-option-card .icon {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'pharmacy_list' %}">Pharmacies</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'pharmacy_detail' pharmacy.id %}">{{ pharmacy.name }}</a></li>
+        <li class="breadcrumb-item active">Place Order</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-shopping-bag"></i> Place Order
+                <span class="badge bg-secondary float-end">{{ pharmacy.name }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" id="orderForm" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Item Summary -->
+                    <div class="alert alert-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ stock.drug.name }}</strong>
+                                <br>
+                                <small class="text-muted">
+                                    {{ stock.drug.get_drug_type_display }}
+                                    {% if stock.drug.dosage_form %}
+                                    | {{ stock.drug.dosage_form }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <strong>₹{{ stock.price|floatformat:2 }}</strong>
+                                <br>
+                                <small class="text-muted">per unit</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quantity -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Quantity</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="number" name="quantity" class="quantity-input" 
+                                   value="{{ quantity }}" min="1" max="{{ stock.available_quantity }}"
+                                   id="quantityInput">
+                            <span class="text-muted">
+                                <i class="fas fa-check-circle text-success"></i>
+                                {{ stock.available_quantity }} units available
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <!-- Delivery Options -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold">Reception Type</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="delivery-option-card w-100 selected" onclick="selectDelivery(this)">
+                                    <input type="radio" name="delivery_option" value="pickup" checked>
+                                    <span class="icon"><i class="fas fa-store text-primary"></i></span>
+                                    Pick up from Pharmacy
+                                </label>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="delivery-option-card w-100" onclick="selectDelivery(this)">
+                                    <input type="radio" name="delivery_option" value="delivery">
+                                    <span class="icon"><i class="fas fa-truck text-success"></i></span>
+                                    Deliver to Address
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 alert alert-info" id="deliveryNotice" style="display: none;">
+                        <i class="fas fa-home"></i>
+                        For home delivery, the medicine will be sent to your registered home address.
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.notes|as_crispy_field }}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check-circle"></i> Place Order
+                    </button>
+                    <a href="{% url 'pharmacy_detail' pharmacy.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-receipt"></i> Order Summary
+            </div>
+            <div class="card-body">
+                <div class="order-summary">
+                    <div class="order-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ stock.drug.name }}</strong>
+                                <br>
+                                <small class="text-muted">Qty: <span id="displayQuantity">{{ quantity }}</span></small>
+                            </div>
+                            <div>
+                                ₹<span id="subtotal">{{ total_amount|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="price-breakdown">
+                        <div class="d-flex justify-content-between">
+                            <span>Subtotal</span>
+                            <span>₹<span id="subtotalDisplay">{{ total_amount|floatformat:2 }}</span></span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Packaging Charge</span>
+                            <span id="packagingChargeDisplay">₹0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between" id="deliveryChargeRow">
+                            <span>Delivery Charge</span>
+                            <span id="deliveryChargeDisplay">₹0.00</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total</span>
+                            <span id="totalDisplay">₹{{ grand_total|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInput = document.getElementById('quantityInput');
+    const displayQuantity = document.getElementById('displayQuantity');
+    const subtotal = document.getElementById('subtotal');
+    const subtotalDisplay = document.getElementById('subtotalDisplay');
+    const totalDisplay = document.getElementById('totalDisplay');
+    const deliveryChargeDisplay = document.getElementById('deliveryChargeDisplay');
+    const packagingChargeDisplay = document.getElementById('packagingChargeDisplay');
+    const deliveryNotice = document.getElementById('deliveryNotice');
+    
+    const pricePerUnit = parseFloat('{{ stock.price|floatformat:2 }}');
+    const distanceKm = parseFloat('{{ distance_km|default_if_none:0 }}') || 0;
+    
+    function getDeliveryCharge(distance) {
+        if (!distance || distance <= 5) {
+            return 0;
+        }
+        const extraKm = Math.max(distance - 5, 0);
+        const blocks = Math.ceil(extraKm / 10);
+        return blocks * 25;
+    }
+    
+    function updateTotals() {
+        const qty = parseInt(quantityInput.value) || 1;
+        const subtotalAmount = pricePerUnit * qty;
+        
+        displayQuantity.textContent = qty;
+        subtotal.textContent = subtotalAmount.toFixed(2);
+        subtotalDisplay.textContent = subtotalAmount.toFixed(2);
+        
+        const deliveryOption = document.querySelector('input[name="delivery_option"]:checked');
+        let currentPackagingCharge = 0;
+        let currentDeliveryCharge = 0;
+        
+        if (deliveryOption && deliveryOption.value === 'delivery') {
+            currentPackagingCharge = 25;
+            currentDeliveryCharge = getDeliveryCharge(distanceKm);
+            deliveryNotice.style.display = 'block';
+        } else {
+            deliveryNotice.style.display = 'none';
+        }
+        
+        packagingChargeDisplay.textContent = '₹' + currentPackagingCharge.toFixed(2);
+        deliveryChargeDisplay.textContent = '₹' + currentDeliveryCharge.toFixed(2);
+        
+        const total = subtotalAmount + currentPackagingCharge + currentDeliveryCharge;
+        totalDisplay.textContent = total.toFixed(2);
+    }
+    
+    quantityInput.addEventListener('input', updateTotals);
+    
+    // Update on delivery option change
+    document.querySelectorAll('input[name="delivery_option"]').forEach(el => {
+        el.addEventListener('change', updateTotals);
+    });
+    
+    // Initial update
+    updateTotals();
+    
+    // Set default delivery option if none selected
+    const defaultOption = document.querySelector('input[name="delivery_option"]:checked');
+    if (!defaultOption) {
+        const firstOption = document.querySelector('input[name="delivery_option"]');
+        if (firstOption) {
+            firstOption.checked = true;
+            updateTotals();
+        }
+    }
+});
+
+function selectDelivery(card) {
+    const radio = card.querySelector('input[type="radio"]');
+    if (radio) {
+        radio.checked = true;
+        document.querySelectorAll('.delivery-option-card').forEach(el => {
+            el.classList.remove('selected');
+        });
+        card.classList.add('selected');
+        const event = new Event('change');
+        radio.dispatchEvent(event);
+    }
+}
+</script>
+{% endblock %}

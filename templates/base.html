@@ -383,6 +383,9 @@
                             <li><a class="dropdown-item" href="{% url 'stock_management' %}">
                                 <i class="fas fa-cubes"></i> Manage Inventory
                             </a></li>
+                            <li><a class="dropdown-item" href="{% url 'pharmacy_order_list' %}">
+                                <i class="fas fa-clipboard-list"></i> Manage Orders
+                            </a></li>
                             {% if user.pharmacy %}
                             <li><a class="dropdown-item" href="{% url 'pharmacy_detail' user.pharmacy.id %}">
                                 <i class="fas fa-eye"></i> View Public Profile
@@ -396,11 +399,8 @@
                             <li><a class="dropdown-item" href="{% url 'profile' %}">
                                 <i class="fas fa-user"></i> My Profile
                             </a></li>
-                            <li><a class="dropdown-item" href="{% url 'symptom_checker' %}">
-                                <i class="fas fa-stethoscope"></i> Symptom Checker
-                            </a></li>
-                            <li><a class="dropdown-item" href="{% url 'prescription_list' %}">
-                                <i class="fas fa-file-prescription"></i> My Prescriptions
+                            <li><a class="dropdown-item" href="{% url 'order_list' %}">
+                                <i class="fas fa-box"></i> My Orders
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% endif %}

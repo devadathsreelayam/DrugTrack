@@ -20,4 +20,15 @@ urlpatterns = [
     
     # Ratings
     path('rate/<int:pk>/', views.rate_pharmacy, name='rate_pharmacy'),
+    
+    # Orders (Direct)
+    path('buy-now/<int:pharmacy_id>/<int:drug_id>/', views.buy_now, name='buy_now'),
+    path('create-order-direct/', views.create_order_direct, name='create_order_direct'),
+    path('orders/', views.order_list, name='order_list'),
+    path('order/<int:order_id>/', views.order_detail, name='order_detail'),
+    path('order/cancel/<int:order_id>/', views.cancel_order, name='cancel_order'),
+    
+    # Pharmacy order management
+    path('pharmacy/orders/', views.pharmacy_order_list, name='pharmacy_order_list'),
+    path('pharmacy/order/update/<int:order_id>/', views.update_order_status, name='update_order_status'),
 ]
