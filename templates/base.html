@@ -254,9 +254,6 @@
                         <a class="nav-link admin-link" href="{% url 'admin_users' %}">Patients</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link admin-link" href="{% url 'admin_pharmacy_owners' %}">Pharmacy Owners</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link admin-link" href="{% url 'admin_predictions' %}">Predictions</a>
                     </li>
                     <li class="nav-item">
@@ -366,14 +363,6 @@
                                 {% endif %}
                             </li>
                             <li><hr class="dropdown-divider"></li>
-                            
-                            <!-- Admin Links -->
-                            {% if user.is_admin_user or user.is_staff %}
-                            <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">
-                                <i class="fas fa-chart-line"></i> Admin Dashboard
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            {% endif %}
                             
                             <!-- Pharmacy Owner Links -->
                             {% if user.is_pharmacy_owner %}
