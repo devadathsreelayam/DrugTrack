@@ -1,6 +1,17 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-body p-4">
+                <h2 class="mb-2">Admin overview</h2>
+                <p class="text-muted mb-0">Use this panel to monitor registrations, symptom checks, and pharmacy activity.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Stats Row -->
 <div class="row g-3 mb-4">
     <div class="col-md-3">
@@ -55,6 +66,30 @@
                         <small class="text-dark-50">Active users</small>
                     </div>
                     <i class="fas fa-user-md fa-2x text-dark-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">Quick admin actions</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{% url 'admin_users' %}" class="btn btn-outline-primary w-100">Patients</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'admin_pharmacies' %}" class="btn btn-outline-success w-100">Review pharmacies</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'admin_predictions' %}" class="btn btn-outline-info w-100">View predictions</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'admin_pharmacy_owners' %}" class="btn btn-outline-secondary w-100">Pharmacy owners</a>
+                    </div>
                 </div>
             </div>
         </div>

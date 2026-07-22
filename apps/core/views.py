@@ -4,9 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.db.models import Count, Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.core.paginator import Paginator
 from django.utils import timezone
+from django.urls import reverse
 
 from apps.pharmacy.models import Drug, Pharmacy
 from .forms import *
@@ -18,14 +19,45 @@ import json
 from .utils.symptom_analyser import symptom_analyzer
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from functools import wraps
+
+
+def get_role_home_view(user):
+    if not user or not getattr(user, 'is_authenticated', False):
+        return 'login'
+    if getattr(user, 'is_staff', False) or getattr(user, 'user_type', '') == 'admin':
+        return 'admin_dashboard'
+    if getattr(user, 'is_pharmacy_owner', False):
+        return 'pharmacy_dashboard'
+    if getattr(user, 'is_patient', False):
+        return 'dashboard'
+    return 'dashboard'
+
+
+def patient_required(function=None, redirect_field_name='next', login_url='login'):
+    """Patient views decorator"""
+
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            if request.user.is_authenticated:
+                if request.user.is_patient:
+                    return view_func(request, *args, **kwargs)
+                return redirect(get_role_home_view(request.user))
+            
+            login_url_with_next = f"{reverse(login_url)}?{redirect_field_name}={request.get_full_path()}"
+            return HttpResponseRedirect(login_url_with_next)
+        return _wrapped_view
+
+    if function:
+        return decorator(function)
+    return decorator
 
 
 def home_view(request):
     """Home page view"""
     if request.user.is_authenticated:
-        if request.user.is_pharmacy_owner:
-            return redirect('pharmacy_dashboard')
-        return redirect('dashboard')
+        return redirect(get_role_home_view(request.user))
     
     # Get some statistics for the home page
     total_pharmacies = Pharmacy.objects.filter(status='approved', is_active=True).count()
@@ -40,7 +72,7 @@ def home_view(request):
 
 def signup_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect(get_role_home_view(request.user))
     
     if request.method == 'POST':
         form = SignupForm(request.POST)
@@ -60,7 +92,7 @@ def signup_view(request):
 def signup_stage1(request):
     """Stage 1: Basic account creation"""
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect(get_role_home_view(request.user))
     
     if request.method == 'POST':
         form = Stage1SignupForm(request.POST)
@@ -112,31 +144,43 @@ def signup_stage3(request):
     if request.method == 'POST':
         form = Stage3HealthForm(request.POST)
         if form.is_valid():
-            health_profile = health_profile or UserHealthProfile(user=request.user)
-            
-            # Update only if values are provided
-            if form.cleaned_data.get('bp'):
-                health_profile.bp = form.cleaned_data['bp']
-            
-            if form.cleaned_data.get('cholesterol'):
-                health_profile.cholesterol = form.cleaned_data['cholesterol']
-            
-            if form.cleaned_data.get('blood_sugar'):
-                health_profile.blood_sugar = form.cleaned_data['blood_sugar']
-            
-            if form.cleaned_data.get('weight') is not None:
-                health_profile.weight = form.cleaned_data['weight']
-            
-            if form.cleaned_data.get('height') is not None:
-                health_profile.height = form.cleaned_data['height']
-            
-            if form.cleaned_data.get('allergies'):
-                health_profile.allergies = form.cleaned_data['allergies']
-            
-            if form.cleaned_data.get('chronic_conditions'):
-                health_profile.chronic_conditions = form.cleaned_data['chronic_conditions']
-            
-            health_profile.save()
+            has_health_data = any([
+                form.cleaned_data.get('bp'),
+                form.cleaned_data.get('cholesterol'),
+                form.cleaned_data.get('blood_sugar'),
+                form.cleaned_data.get('weight') is not None,
+                form.cleaned_data.get('height') is not None,
+                form.cleaned_data.get('allergies'),
+                form.cleaned_data.get('chronic_conditions'),
+            ])
+
+            if has_health_data:
+                health_profile = health_profile or UserHealthProfile(user=request.user)
+                
+                # Update only if values are provided
+                if form.cleaned_data.get('bp'):
+                    health_profile.bp = form.cleaned_data['bp']
+                
+                if form.cleaned_data.get('cholesterol'):
+                    health_profile.cholesterol = form.cleaned_data['cholesterol']
+                
+                if form.cleaned_data.get('blood_sugar'):
+                    health_profile.blood_sugar = form.cleaned_data['blood_sugar']
+                
+                if form.cleaned_data.get('weight') is not None:
+                    health_profile.weight = form.cleaned_data['weight']
+                
+                if form.cleaned_data.get('height') is not None:
+                    health_profile.height = form.cleaned_data['height']
+                
+                if form.cleaned_data.get('allergies'):
+                    health_profile.allergies = form.cleaned_data['allergies']
+                
+                if form.cleaned_data.get('chronic_conditions'):
+                    health_profile.chronic_conditions = form.cleaned_data['chronic_conditions']
+                
+                health_profile.save()
+
             messages.success(request, 'Health details saved successfully!')
             return redirect('signup_stage4')
         else:
@@ -211,9 +255,7 @@ def complete_profile(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        if request.user.is_pharmacy_owner:
-            return redirect('pharmacy_dashboard')
-        return redirect('dashboard')
+        return redirect(get_role_home_view(request.user))
     
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -223,19 +265,21 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, f'Welcome back, {user.username}!')
-            if user.is_pharmacy_owner:
-                return redirect('pharmacy_dashboard')
-            return redirect('dashboard')
+            return redirect(get_role_home_view(user))
         else:
             messages.error(request, 'Invalid username or password.')
     
     return render(request, 'accounts/login.html')
 
+
+@login_required
 def logout_view(request):
     logout(request)
     return redirect('home')
 
+
 @login_required
+@patient_required
 def dashboard_view(request):
     user = request.user
     total_symptom_checks = SymptomPrediction.objects.filter(user=user).count()
@@ -260,6 +304,7 @@ def dashboard_view(request):
 
 
 @login_required
+@patient_required
 def profile_view(request):
     if request.method == 'POST':
         form = ProfileForm(request.POST, instance=request.user)
@@ -282,6 +327,7 @@ def profile_view(request):
 
 
 @login_required
+@patient_required
 def add_medication(request):
     """Add a medication to user's list"""
     if request.method == 'POST':
@@ -298,6 +344,7 @@ def add_medication(request):
 
 
 @login_required
+@patient_required
 def prescription_upload_view(request):
     """Upload a new prescription with structured data"""
     if request.method == 'POST':
@@ -345,6 +392,7 @@ def prescription_upload_view(request):
 
 
 @login_required
+@patient_required
 def prescription_list_view(request):
     """List all prescriptions for the user"""
     prescriptions = Prescription.objects.filter(user=request.user).order_by('-created_at')
@@ -357,6 +405,7 @@ def prescription_list_view(request):
 
 
 @login_required
+@patient_required
 def prescription_detail_view(request, pk):
     """View detailed prescription information"""
     prescription = get_object_or_404(Prescription, id=pk, user=request.user)
@@ -364,6 +413,7 @@ def prescription_detail_view(request, pk):
 
 
 @login_required
+@patient_required
 def delete_prescription_view(request, pk):
     """Delete a prescription"""
     prescription = get_object_or_404(Prescription, id=pk, user=request.user)
@@ -377,6 +427,7 @@ def delete_prescription_view(request, pk):
 
 
 @login_required
+@patient_required
 def update_health(request):
     """Update user's health profile with new fields"""
     if request.method == 'POST':
@@ -411,6 +462,7 @@ def update_health(request):
 
 
 @login_required
+@patient_required
 def remove_medication(request, med_id):
     """Remove a medication from user's list"""
     medication = get_object_or_404(UserMedication, id=med_id, user=request.user)
@@ -420,12 +472,14 @@ def remove_medication(request, med_id):
 
 
 @login_required
+@patient_required
 def symptom_checker_view(request):
     """Render the symptom checker page"""
     return render(request, 'core/symptom_checker.html')
 
 
 @login_required
+@patient_required
 @csrf_exempt
 @require_http_methods(["POST"])
 def analyze_symptoms_api(request):
@@ -476,6 +530,7 @@ def analyze_symptoms_api(request):
 
 
 @login_required
+@patient_required
 def symptom_history_view(request):
     """View past symptom analyses with search and filter"""
     predictions = SymptomPrediction.objects.filter(user=request.user)
@@ -536,6 +591,7 @@ def symptom_history_view(request):
 
 
 @login_required
+@patient_required
 def symptom_detail_view(request, pk):
     """View detailed symptom analysis"""
     prediction = get_object_or_404(SymptomPrediction, id=pk, user=request.user)
@@ -543,6 +599,7 @@ def symptom_detail_view(request, pk):
 
 
 @login_required
+@patient_required
 def update_location_view(request):
     """Update user's location"""
     if request.method == 'POST':

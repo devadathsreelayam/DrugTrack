@@ -7,6 +7,7 @@ from functools import wraps
 
 from apps.pharmacy.models import Pharmacy
 from apps.core.models import User, SymptomPrediction
+from apps.core.views import get_role_home_view
 
 
 def admin_required(function=None, redirect_field_name='next', login_url='admin_login'):
@@ -14,8 +15,11 @@ def admin_required(function=None, redirect_field_name='next', login_url='admin_l
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            if request.user.is_authenticated and request.user.is_staff:
+            if request.user.is_authenticated and (request.user.is_staff or request.user.user_type == 'admin'):
                 return view_func(request, *args, **kwargs)
+            
+            if request.user.is_authenticated:
+                return redirect(get_role_home_view(request.user))
             
             from django.http import HttpResponseRedirect
             from django.urls import reverse
@@ -30,7 +34,7 @@ def admin_required(function=None, redirect_field_name='next', login_url='admin_l
 
 def admin_login_view(request):
     """Custom admin login page"""
-    if request.user.is_authenticated and request.user.is_staff:
+    if request.user.is_authenticated and (request.user.is_staff or request.user.user_type == 'admin'):
         return redirect('admin_dashboard')
     
     if request.method == 'POST':
@@ -38,7 +42,7 @@ def admin_login_view(request):
         password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
         
-        if user is not None and user.is_staff:
+        if user is not None and (user.is_staff or user.user_type == 'admin'):
             login(request, user)
             next_url = request.GET.get('next', 'admin_dashboard')
             return redirect(next_url)

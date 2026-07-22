@@ -13,8 +13,19 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <h1 class="text-white mb-2">Welcome back, {{ user.get_full_name|default:user.username }}!</h1>
-        <p class="text-white-50 mb-0">Here’s a quick snapshot of your health and pharmacy activity.</p>
+        <div class="card border-0">
+            <div class="card-body p-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                    <div>
+                        <h1 class="mb-2">Welcome back, {{ user.get_full_name|default:user.username }}.</h1>
+                        <p class="text-muted mb-0">Here is a practical overview of your recent health activity.</p>
+                    </div>
+                    <div class="text-md-end">
+                        <span class="badge bg-primary-subtle text-primary">Profile status: {% if profile_complete %}Ready{% else %}Needs a few details{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -73,25 +84,37 @@
         <div class="card">
             <div class="card-header">Quick actions</div>
             <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3 mb-3">
+                <div class="row g-3">
+                    <div class="col-md-3">
                         <a href="{% url 'symptom_checker' %}" class="text-decoration-none">
-                            <div class="p-3 rounded bg-light">Check symptoms</div>
+                            <div class="p-3 rounded bg-light h-100">
+                                <i class="fas fa-stethoscope text-primary mb-2 d-block"></i>
+                                <div class="fw-semibold">Check symptoms</div>
+                            </div>
                         </a>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-3">
                         <a href="{% url 'prescription_upload' %}" class="text-decoration-none">
-                            <div class="p-3 rounded bg-light">Upload prescription</div>
+                            <div class="p-3 rounded bg-light h-100">
+                                <i class="fas fa-file-upload text-primary mb-2 d-block"></i>
+                                <div class="fw-semibold">Upload prescription</div>
+                            </div>
                         </a>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-3">
                         <a href="{% url 'prescription_list' %}" class="text-decoration-none">
-                            <div class="p-3 rounded bg-light">View prescriptions</div>
+                            <div class="p-3 rounded bg-light h-100">
+                                <i class="fas fa-file-prescription text-primary mb-2 d-block"></i>
+                                <div class="fw-semibold">View prescriptions</div>
+                            </div>
                         </a>
                     </div>
-                    <div class="col-md-3 mb-3">
+                    <div class="col-md-3">
                         <a href="{% url 'pharmacy_list' %}" class="text-decoration-none">
-                            <div class="p-3 rounded bg-light">Find pharmacy</div>
+                            <div class="p-3 rounded bg-light h-100">
+                                <i class="fas fa-store text-primary mb-2 d-block"></i>
+                                <div class="fw-semibold">Find pharmacy</div>
+                            </div>
                         </a>
                     </div>
                 </div>
