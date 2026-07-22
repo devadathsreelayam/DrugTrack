@@ -203,6 +203,7 @@
                 
                 <!-- Actions -->
                 <div class="mt-3 d-flex gap-2">
+                    {% if user.user_type == 'patient' %}
                     <a href="{% url 'order_list' %}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Back to Orders
                     </a>
@@ -210,6 +211,11 @@
                     <a href="{% url 'cancel_order' order.id %}" class="btn btn-danger"
                        onclick="return confirm('Cancel this order?')">
                         <i class="fas fa-times"></i> Cancel Order
+                    </a>
+                    {% endif %}
+                    {% elif user.user_type == 'pharmacy_owner' %}
+                    <a href="{% url 'update_order_status' order.id %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Update status
                     </a>
                     {% endif %}
                 </div>

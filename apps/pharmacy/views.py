@@ -481,7 +481,7 @@ def stock_management(request):
         pharmacy = Pharmacy.objects.get(owner=request.user, status='approved')
     except Pharmacy.DoesNotExist:
         messages.error(request, 'You need an approved pharmacy to manage stock.')
-        return redirect('pharmacy_register')
+        return redirect('pharmacy_dashboard')
     
     stock_items = PharmacyStock.objects.filter(pharmacy=pharmacy).select_related('drug')
     
@@ -516,7 +516,7 @@ def add_stock(request):
         pharmacy = Pharmacy.objects.get(owner=request.user, status='approved')
     except Pharmacy.DoesNotExist:
         messages.error(request, 'You need an approved pharmacy to manage stock.')
-        return redirect('pharmacy_register')
+        return redirect('pharmacy_dashboard')
     
     if request.method == 'POST':
         form = PharmacyStockForm(request.POST)
@@ -773,8 +773,29 @@ def create_order_direct(request):
 @login_required
 def order_detail(request, order_id):
     """View order details"""
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    return render(request, 'pharmacy/order_detail.html', {'order': order})
+    try:
+        order = Order.objects.get(id=order_id, user=request.user)
+    except Order.DoesNotExist:
+        messages.error(request, 'Order not found.')
+        return redirect('pharmacy_order_list')
+    
+    return render(request, 'pharmacy/order_detail.html', {'order': order, 'user': request.user})
+
+
+@login_required
+def pharmacy_order_detail(request, order_id):
+    """View order details for pharmacy owners"""
+    try:
+        pharmacy = Pharmacy.objects.get(owner=request.user)
+        order = get_object_or_404(Order, id=order_id, pharmacy=pharmacy)
+    except Pharmacy.DoesNotExist:
+        messages.error(request, 'You need to register a pharmacy first.')
+        return redirect('pharmacy_register')
+    
+    return render(request, 'pharmacy/order_detail.html', {
+        'order': order,
+        'user': request.user,
+    })
 
 
 @login_required
